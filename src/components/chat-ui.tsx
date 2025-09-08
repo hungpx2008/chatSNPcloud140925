@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
   PlusSquare,
   LogOut,
   X,
+  File as FileIcon,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -53,6 +54,13 @@ interface Message {
   content: string | React.ReactNode;
 }
 
+interface AttachedFile {
+  dataUri: string;
+  name: string;
+  type: string;
+}
+
+
 // Mock chat history data
 const chatHistory = [
   { id: "1", title: "Printer Setup Issue" },
@@ -71,7 +79,7 @@ export function ChatUI({ department }: { department: string }) {
   ]);
   const [input, setInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [attachedFile, setAttachedFile] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,21 +90,34 @@ export function ChatUI({ department }: { department: string }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const renderAttachedFile = (file: AttachedFile, size: 'sm' | 'lg'): ReactNode => {
+    const isImage = file.type.startsWith('image/');
+    if (isImage) {
+      return (
+         <Image
+            src={file.dataUri}
+            alt="Attached file"
+            width={size === 'sm' ? 80 : 200}
+            height={size === 'sm' ? 80 : 200}
+            className="rounded-lg mb-2"
+          />
+      );
+    }
+    return (
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-muted mb-2 max-w-xs">
+        <FileIcon className="h-6 w-6 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground truncate">{file.name}</span>
+      </div>
+    );
+  }
+
   const handleFormSubmit = async (formData: FormData) => {
     const userInput = formData.get("userInput") as string;
     if (!userInput.trim() && !attachedFile) return;
 
     const userMessageContent = (
       <div>
-        {attachedFile && (
-          <Image
-            src={attachedFile}
-            alt="Attached file"
-            width={200}
-            height={200}
-            className="rounded-lg mb-2"
-          />
-        )}
+        {attachedFile && renderAttachedFile(attachedFile, 'lg')}
         <p>{userInput}</p>
       </div>
     );
@@ -125,7 +146,7 @@ export function ChatUI({ department }: { department: string }) {
     setAttachedFile(null);
 
 
-    const botResponse = await getHelp(userInput, department, fileToSend ?? undefined);
+    const botResponse = await getHelp(userInput, department, fileToSend?.dataUri);
     const newBotMessage: Message = {
       id: Date.now() + 2,
       role: "bot",
@@ -143,7 +164,11 @@ export function ChatUI({ department }: { department: string }) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAttachedFile(reader.result as string);
+        setAttachedFile({
+          dataUri: reader.result as string,
+          name: file.name,
+          type: file.type
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -301,13 +326,9 @@ export function ChatUI({ department }: { department: string }) {
           <div className="max-w-3xl mx-auto">
              {attachedFile && (
               <div className="relative mb-2 w-fit">
-                <Image
-                  src={attachedFile}
-                  alt="Attachment preview"
-                  width={80}
-                  height={80}
-                  className="rounded-lg"
-                />
+                <div className="p-2 border rounded-lg">
+                  {renderAttachedFile(attachedFile, 'sm')}
+                </div>
                 <Button
                   type="button"
                   variant="destructive"
@@ -334,7 +355,13 @@ export function ChatUI({ department }: { department: string }) {
                 <Paperclip />
                 <span className="sr-only">Attach file</span>
               </Button>
-              <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                onChange={handleFileChange} 
+                accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain" 
+              />
               <Input
                 name="userInput"
                 placeholder="Type your question here..."
@@ -371,3 +398,5 @@ function SubmitButton() {
     </Button>
   );
 }
+
+    
