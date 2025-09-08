@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { ChatUI } from "@/components/chat-ui";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function ChatPage({
   searchParams,
@@ -12,5 +13,9 @@ export default function ChatPage({
     redirect("/");
   }
 
-  return <ChatUI department={department} />;
+  return (
+    <SidebarProvider>
+      <ChatUI department={department} />
+    </SidebarProvider>
+  );
 }
