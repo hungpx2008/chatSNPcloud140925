@@ -51,17 +51,17 @@ export function SignupForm() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                {language === 'en' ? <UsaFlagIcon /> : <VietnamFlagIcon />}
+                {language === 'en' ? <UsaFlagIcon className="h-6 w-6" /> : <VietnamFlagIcon className="h-6 w-6" />}
                 <span className="sr-only">{t('languageSwitcherTooltip')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
-                <UsaFlagIcon className="mr-2" />
+                <UsaFlagIcon className="mr-2 h-5 w-5" />
                 {t('english')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
-                <VietnamFlagIcon className="mr-2" />
+                <VietnamFlagIcon className="mr-2 h-5 w-5" />
                 {t('vietnamese')}
               </DropdownMenuItem>
             </DropdownMenuContent>
