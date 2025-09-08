@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "./logo";
-import { LoaderCircle, Languages } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { useLanguage } from "./language-provider";
 import {
   DropdownMenu,
@@ -18,6 +18,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { UsaFlagIcon } from "./usa-flag";
+import { VietnamFlagIcon } from "./vietnam-flag";
 
 
 export function SignupForm() {
@@ -49,15 +51,17 @@ export function SignupForm() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                <Languages />
+                {language === 'en' ? <UsaFlagIcon /> : <VietnamFlagIcon />}
                 <span className="sr-only">{t('languageSwitcherTooltip')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                <UsaFlagIcon className="mr-2" />
                 {t('english')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                <VietnamFlagIcon className="mr-2" />
                 {t('vietnamese')}
               </DropdownMenuItem>
             </DropdownMenuContent>

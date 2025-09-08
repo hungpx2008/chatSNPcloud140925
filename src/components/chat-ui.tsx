@@ -18,7 +18,6 @@ import {
   X,
   File as FileIcon,
   Trash2,
-  Languages
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -66,6 +65,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { UsaFlagIcon } from "./usa-flag";
+import { VietnamFlagIcon } from "./vietnam-flag";
 
 interface Message {
   id: number;
@@ -371,15 +372,17 @@ export function ChatUI({ department }: { department: string }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <Languages />
+                  {language === 'en' ? <UsaFlagIcon /> : <VietnamFlagIcon />}
                    <span className="sr-only">{t('languageSwitcherTooltip')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                  <UsaFlagIcon className="mr-2" />
                   {t('english')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                  <VietnamFlagIcon className="mr-2" />
                   {t('vietnamese')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
