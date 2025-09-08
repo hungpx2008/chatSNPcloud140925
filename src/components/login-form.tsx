@@ -70,7 +70,7 @@ export function LoginForm() {
         <div className="absolute top-4 right-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-12 w-12">
                   {language === 'en' ? <UsaFlagIcon className="h-8 w-8" /> : <VietnamFlagIcon className="h-8 w-8" />}
                   <span className="sr-only">{t('languageSwitcherTooltip')}</span>
                 </Button>
