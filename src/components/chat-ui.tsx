@@ -1,8 +1,10 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Send,
@@ -12,7 +14,9 @@ import {
   Paperclip,
   Search,
   PlusSquare,
+  LogOut,
 } from "lucide-react";
+import { signOut } from "firebase/auth";
 
 import { getHelp } from "@/app/actions";
 import { Input } from "@/components/ui/input";
@@ -24,6 +28,7 @@ import { Logo } from "./logo";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -37,6 +42,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { useAuth } from "./auth-provider";
+import { auth } from "@/lib/firebase";
 
 interface Message {
   id: number;
@@ -65,6 +72,8 @@ export function ChatUI({ department }: { department: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,6 +115,11 @@ export function ChatUI({ department }: { department: string }) {
 
   const handleFileAttach = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
 
   const filteredHistory = chatHistory.filter((chat) =>
@@ -154,6 +168,31 @@ export function ChatUI({ department }: { department: string }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-2 p-2">
+            <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                    <User size={20} />
+                </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-medium truncate">{user?.email}</p>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSignOut}>
+                    <LogOut />
+                    <span className="sr-only">Sign Out</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Sign Out</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset className="flex flex-col h-screen">
         <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
