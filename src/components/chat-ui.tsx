@@ -78,7 +78,7 @@ export function ChatUI({ department }: { department: string }) {
           </Link>
         </Button>
         <div className="text-center">
-          <h1 className="text-xl font-semibold">Departmental Chat</h1>
+          <h1 className="text-xl font-semibold">ChatSNP</h1>
           <p className="text-sm text-muted-foreground">{department}</p>
         </div>
         <div className="w-10"></div> {/* Spacer */}

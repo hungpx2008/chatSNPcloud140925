@@ -35,7 +35,7 @@ export function DepartmentSelector() {
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
         <Logo />
-        <CardTitle className="text-3xl font-bold pt-4">Departmental Chat</CardTitle>
+        <CardTitle className="text-3xl font-bold pt-4">ChatSNP</CardTitle>
         <CardDescription>Select a department to start your conversation</CardDescription>
       </CardHeader>
       <CardContent>
