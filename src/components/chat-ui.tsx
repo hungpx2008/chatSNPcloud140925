@@ -11,6 +11,7 @@ import {
   Bot,
   Paperclip,
   Search,
+  PlusSquare,
 } from "lucide-react";
 
 import { getHelp } from "@/app/actions";
@@ -30,6 +31,12 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from "./ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface Message {
   id: number;
@@ -109,6 +116,22 @@ export function ChatUI({ department }: { department: string }) {
     <>
       <Sidebar>
         <SidebarHeader>
+          <div className="flex justify-between items-center mb-2">
+            <SidebarTrigger className="hidden md:flex" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <PlusSquare />
+                    <span className="sr-only">New Chat</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>New Chat</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -153,7 +176,6 @@ export function ChatUI({ department }: { department: string }) {
             </div>
           </div>
           <div className="w-10 flex items-center gap-2">
-            <SidebarTrigger className="hidden md:flex" />
           </div>{" "}
           {/* Spacer */}
         </header>
