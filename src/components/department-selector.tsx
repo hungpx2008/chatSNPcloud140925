@@ -12,6 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
+import { useAuth } from "./auth-provider";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
 
 const departments = [
   "IT Department",
@@ -24,11 +27,17 @@ const departments = [
 export function DepartmentSelector() {
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleStartChat = () => {
     if (selectedDepartment) {
       router.push(`/chat?department=${encodeURIComponent(selectedDepartment)}`);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
 
   return (
@@ -37,6 +46,7 @@ export function DepartmentSelector() {
         <Logo />
         <CardTitle className="text-3xl font-bold pt-4">ChatSNP</CardTitle>
         <CardDescription>Select a department to start your conversation</CardDescription>
+        {user && <p className="text-sm text-muted-foreground pt-2">Welcome, {user.email}</p>}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -59,6 +69,9 @@ export function DepartmentSelector() {
             size="lg"
           >
             Start Chat
+          </Button>
+          <Button onClick={handleSignOut} variant="outline" className="w-full">
+            Sign Out
           </Button>
         </div>
       </CardContent>
