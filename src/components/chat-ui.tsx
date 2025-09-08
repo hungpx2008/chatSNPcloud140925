@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 import {
   ArrowLeft,
   Send,
@@ -15,6 +16,7 @@ import {
   Search,
   PlusSquare,
   LogOut,
+  X,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -69,6 +71,7 @@ export function ChatUI({ department }: { department: string }) {
   ]);
   const [input, setInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [attachedFile, setAttachedFile] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,12 +84,27 @@ export function ChatUI({ department }: { department: string }) {
 
   const handleFormSubmit = async (formData: FormData) => {
     const userInput = formData.get("userInput") as string;
-    if (!userInput.trim()) return;
+    if (!userInput.trim() && !attachedFile) return;
+
+    const userMessageContent = (
+      <div>
+        {attachedFile && (
+          <Image
+            src={attachedFile}
+            alt="Attached file"
+            width={200}
+            height={200}
+            className="rounded-lg mb-2"
+          />
+        )}
+        <p>{userInput}</p>
+      </div>
+    );
 
     const newUserMessage: Message = {
       id: Date.now(),
       role: "user",
-      content: userInput,
+      content: userMessageContent,
     };
 
     const thinkingMessage: Message = {
@@ -103,8 +121,11 @@ export function ChatUI({ department }: { department: string }) {
     setMessages((prev) => [...prev, newUserMessage, thinkingMessage]);
     formRef.current?.reset();
     setInput("");
+    const fileToSend = attachedFile;
+    setAttachedFile(null);
 
-    const botResponse = await getHelp(userInput, department);
+
+    const botResponse = await getHelp(userInput, department, fileToSend ?? undefined);
     const newBotMessage: Message = {
       id: Date.now() + 2,
       role: "bot",
@@ -113,8 +134,19 @@ export function ChatUI({ department }: { department: string }) {
     setMessages((prev) => [...prev.slice(0, -1), newBotMessage]);
   };
 
-  const handleFileAttach = () => {
+  const handleFileAttachClick = () => {
     fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAttachedFile(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSignOut = async () => {
@@ -266,31 +298,54 @@ export function ChatUI({ department }: { department: string }) {
         </main>
 
         <footer className="p-4 border-t bg-card">
-          <form
-            ref={formRef}
-            action={handleFormSubmit}
-            className="flex gap-2 max-w-3xl mx-auto"
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={handleFileAttach}
+          <div className="max-w-3xl mx-auto">
+             {attachedFile && (
+              <div className="relative mb-2 w-fit">
+                <Image
+                  src={attachedFile}
+                  alt="Attachment preview"
+                  width={80}
+                  height={80}
+                  className="rounded-lg"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                  onClick={() => setAttachedFile(null)}
+                >
+                  <X size={16} />
+                  <span className="sr-only">Remove attachment</span>
+                </Button>
+              </div>
+            )}
+            <form
+              ref={formRef}
+              action={handleFormSubmit}
+              className="flex gap-2"
             >
-              <Paperclip />
-              <span className="sr-only">Attach file</span>
-            </Button>
-            <input type="file" ref={fileInputRef} className="hidden" />
-            <Input
-              name="userInput"
-              placeholder="Type your question here..."
-              className="flex-1"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              autoComplete="off"
-            />
-            <SubmitButton />
-          </form>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleFileAttachClick}
+              >
+                <Paperclip />
+                <span className="sr-only">Attach file</span>
+              </Button>
+              <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+              <Input
+                name="userInput"
+                placeholder="Type your question here..."
+                className="flex-1"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                autoComplete="off"
+              />
+              <SubmitButton />
+            </form>
+          </div>
         </footer>
       </SidebarInset>
     </>
