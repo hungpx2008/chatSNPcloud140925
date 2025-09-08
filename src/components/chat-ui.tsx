@@ -18,6 +18,7 @@ import {
   LogOut,
   X,
   File as FileIcon,
+  Trash2,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -47,11 +48,29 @@ import {
 } from "./ui/tooltip";
 import { useAuth } from "./auth-provider";
 import { auth } from "@/lib/firebase";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Message {
   id: number;
   role: "user" | "bot";
   content: string | React.ReactNode;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  department: string;
 }
 
 interface AttachedFile {
@@ -60,26 +79,20 @@ interface AttachedFile {
   type: string;
 }
 
-
-// Mock chat history data
-const chatHistory = [
-  { id: "1", title: "Printer Setup Issue" },
-  { id: "2", title: "Software Installation" },
-  { id: "3", title: "Network Connectivity" },
-  { id: "4", title: "Password Reset Request" },
-];
+const createWelcomeMessage = (department: string): Message => ({
+  id: Date.now(),
+  role: "bot",
+  content: `Hello! How can I help you in the ${department} today?`,
+});
 
 export function ChatUI({ department }: { department: string }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: "bot",
-      content: `Hello! How can I help you in the ${department} today?`,
-    },
-  ]);
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([createWelcomeMessage(department)]);
   const [input, setInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,13 +151,31 @@ export function ChatUI({ department }: { department: string }) {
         </div>
       ),
     };
+    
+    const updatedMessages = [...messages, newUserMessage, thinkingMessage];
+    setMessages(updatedMessages);
 
-    setMessages((prev) => [...prev, newUserMessage, thinkingMessage]);
     formRef.current?.reset();
     setInput("");
     const fileToSend = attachedFile;
     setAttachedFile(null);
 
+    let currentChatId = activeChatId;
+
+    // Create a new chat session if it's the first user message
+    if (!activeChatId) {
+      const newChatId = `chat_${Date.now()}`;
+      const newChatTitle = userInput.substring(0, 30) + (userInput.length > 30 ? "..." : "");
+      const newChatSession: ChatSession = {
+        id: newChatId,
+        title: newChatTitle,
+        messages: updatedMessages,
+        department: department
+      };
+      setChatHistory(prev => [newChatSession, ...prev]);
+      setActiveChatId(newChatId);
+      currentChatId = newChatId;
+    }
 
     const botResponse = await getHelp(userInput, department, fileToSend?.dataUri);
     const newBotMessage: Message = {
@@ -152,7 +183,18 @@ export function ChatUI({ department }: { department: string }) {
       role: "bot",
       content: botResponse,
     };
-    setMessages((prev) => [...prev.slice(0, -1), newBotMessage]);
+
+    const finalMessages = [...updatedMessages.slice(0, -1), newBotMessage];
+    setMessages(finalMessages);
+
+    // Update the history with the final messages
+    if (currentChatId) {
+      setChatHistory(prev => 
+        prev.map(chat => 
+          chat.id === currentChatId ? { ...chat, messages: finalMessages } : chat
+        )
+      );
+    }
   };
 
   const handleFileAttachClick = () => {
@@ -179,6 +221,26 @@ export function ChatUI({ department }: { department: string }) {
     router.push('/login');
   };
 
+  const handleNewChat = () => {
+    setActiveChatId(null);
+    setMessages([createWelcomeMessage(department)]);
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    const selectedChat = chatHistory.find(chat => chat.id === chatId);
+    if (selectedChat) {
+      setActiveChatId(selectedChat.id);
+      setMessages(selectedChat.messages);
+    }
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+    if (activeChatId === chatId) {
+      handleNewChat();
+    }
+  };
+
   const filteredHistory = chatHistory.filter((chat) =>
     chat.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -192,7 +254,7 @@ export function ChatUI({ department }: { department: string }) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewChat}>
                     <PlusSquare />
                     <span className="sr-only">New Chat</span>
                   </Button>
@@ -218,9 +280,34 @@ export function ChatUI({ department }: { department: string }) {
           <SidebarMenu>
             {filteredHistory.map((chat) => (
               <SidebarMenuItem key={chat.id}>
-                <SidebarMenuButton tooltip={chat.title} size="sm">
-                  <span>{chat.title}</span>
+                <SidebarMenuButton 
+                  tooltip={chat.title} 
+                  size="sm" 
+                  className="w-full justify-start"
+                  isActive={chat.id === activeChatId}
+                  onClick={() => handleSelectChat(chat.id)}
+                >
+                  <span className="truncate flex-1 text-left">{chat.title}</span>
                 </SidebarMenuButton>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100">
+                      <Trash2 size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete this chat session.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteChat(chat.id)}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
