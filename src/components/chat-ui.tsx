@@ -372,7 +372,7 @@ export function ChatUI({ department }: { department: string }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  {language === 'en' ? <UsaFlagIcon className="h-6 w-6" /> : <VietnamFlagIcon className="h-6 w-6" />}
+                  {language === 'en' ? <UsaFlagIcon className="h-6 w-6" /> : <VietnamFlagIcon className="h-8 w-8" />}
                    <span className="sr-only">{t('languageSwitcherTooltip')}</span>
                 </Button>
               </DropdownMenuTrigger>
