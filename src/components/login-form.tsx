@@ -56,7 +56,9 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
-        <Logo />
+        <div className="h-16 w-16">
+          <Logo />
+        </div>
         <CardTitle className="text-3xl font-bold pt-4">Login</CardTitle>
         <CardDescription>Enter your credentials to access your account</CardDescription>
       </CardHeader>

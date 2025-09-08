@@ -36,7 +36,9 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
-        <Logo />
+        <div className="h-16 w-16">
+          <Logo />
+        </div>
         <CardTitle className="text-3xl font-bold pt-4">Create an Account</CardTitle>
         <CardDescription>Enter your email and password to sign up</CardDescription>
       </CardHeader>

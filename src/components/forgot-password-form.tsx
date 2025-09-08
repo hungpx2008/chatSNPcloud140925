@@ -35,7 +35,9 @@ export function ForgotPasswordForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
-        <Logo />
+        <div className="h-16 w-16">
+          <Logo />
+        </div>
         <CardTitle className="text-3xl font-bold pt-4">Forgot Password</CardTitle>
         <CardDescription>Enter your email to receive a reset link</CardDescription>
       </CardHeader>

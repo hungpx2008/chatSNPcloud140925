@@ -43,7 +43,9 @@ export function DepartmentSelector() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
-        <Logo />
+        <div className="h-16 w-16">
+          <Logo />
+        </div>
         <CardTitle className="text-3xl font-bold pt-4">ChatSNP</CardTitle>
         <CardDescription>Select a department to start your conversation</CardDescription>
         {user && <p className="text-sm text-muted-foreground pt-2">Welcome, {user.email}</p>}
