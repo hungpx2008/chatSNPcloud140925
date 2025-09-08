@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Logo } from "./logo";
 
 interface Message {
   id: number;
@@ -77,9 +78,12 @@ export function ChatUI({ department }: { department: string }) {
             <span className="sr-only">Back</span>
           </Link>
         </Button>
-        <div className="text-center">
-          <h1 className="text-xl font-semibold">ChatSNP</h1>
-          <p className="text-sm text-muted-foreground">{department}</p>
+        <div className="flex items-center gap-2">
+          <Logo />
+          <div>
+            <h1 className="text-xl font-semibold">ChatSNP</h1>
+            <p className="text-sm text-muted-foreground">{department}</p>
+          </div>
         </div>
         <div className="w-10"></div> {/* Spacer */}
       </header>
