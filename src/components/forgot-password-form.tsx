@@ -9,13 +9,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "./logo";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Languages } from "lucide-react";
+import { useLanguage } from "./language-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t, language, setLanguage } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +32,7 @@ export function ForgotPasswordForm() {
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
-      setMessage("Password reset email sent. Please check your inbox.");
+      setMessage(t('passwordResetSent'));
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -35,20 +43,38 @@ export function ForgotPasswordForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
+        <div className="absolute top-4 right-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Languages />
+                <span className="sr-only">{t('languageSwitcherTooltip')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                {t('english')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                {t('vietnamese')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div className="h-16 w-16">
           <Logo />
         </div>
-        <CardTitle className="text-3xl font-bold pt-4">Forgot Password</CardTitle>
-        <CardDescription>Enter your email to receive a reset link</CardDescription>
+        <CardTitle className="text-3xl font-bold pt-4">{t('forgotPasswordTitle')}</CardTitle>
+        <CardDescription>{t('forgotPasswordDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder={t('emailPlaceholder')}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -57,13 +83,13 @@ export function ForgotPasswordForm() {
           {message && <p className="text-sm text-green-600">{message}</p>}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
-            {loading ? <LoaderCircle className="animate-spin" /> : 'Send Reset Link'}
+            {loading ? <LoaderCircle className="animate-spin" /> : t('sendResetLinkButton')}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">
-          Remember your password?{' '}
+          {t('rememberPasswordPrompt')}{' '}
           <Link href="/login" passHref>
-            <Button variant="link" className="p-0 h-auto">Login</Button>
+            <Button variant="link" className="p-0 h-auto">{t('loginTitle')}</Button>
           </Link>
         </div>
       </CardContent>

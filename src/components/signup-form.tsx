@@ -10,7 +10,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "./logo";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Languages } from "lucide-react";
+import { useLanguage } from "./language-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+
 
 export function SignupForm() {
   const [email, setEmail] = useState("");
@@ -18,6 +26,7 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,27 +45,45 @@ export function SignupForm() {
   return (
     <Card className="w-full max-w-md shadow-2xl">
       <CardHeader className="items-center text-center">
+        <div className="absolute top-4 right-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Languages />
+                <span className="sr-only">{t('languageSwitcherTooltip')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                {t('english')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                {t('vietnamese')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div className="h-16 w-16">
           <Logo />
         </div>
-        <CardTitle className="text-3xl font-bold pt-4">Create an Account</CardTitle>
-        <CardDescription>Enter your email and password to sign up</CardDescription>
+        <CardTitle className="text-3xl font-bold pt-4">{t('signupTitle')}</CardTitle>
+        <CardDescription>{t('signupDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('emailLabel')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="m@example.com"
+              placeholder={t('emailPlaceholder')}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('passwordLabel')}</Label>
             <Input
               id="password"
               type="password"
@@ -67,13 +94,13 @@ export function SignupForm() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
-            {loading ? <LoaderCircle className="animate-spin" /> : 'Sign Up'}
+            {loading ? <LoaderCircle className="animate-spin" /> : t('signupButton')}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">
-          Already have an account?{' '}
+          {t('haveAccountPrompt')}{' '}
           <Link href="/login" passHref>
-            <Button variant="link" className="p-0 h-auto">Login</Button>
+            <Button variant="link" className="p-0 h-auto">{t('loginTitle')}</Button>
           </Link>
         </div>
       </CardContent>

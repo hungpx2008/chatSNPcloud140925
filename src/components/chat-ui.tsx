@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, ReactNode } from "react";
@@ -19,6 +18,7 @@ import {
   X,
   File as FileIcon,
   Trash2,
+  Languages
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -59,6 +59,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useLanguage } from "./language-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface Message {
   id: number;
@@ -79,13 +86,15 @@ interface AttachedFile {
   type: string;
 }
 
-const createWelcomeMessage = (department: string): Message => ({
-  id: Date.now(),
-  role: "bot",
-  content: `Hello! How can I help you in the ${department} today?`,
-});
-
 export function ChatUI({ department }: { department: string }) {
+  const { t, language, setLanguage } = useLanguage();
+
+  const createWelcomeMessage = (dept: string): Message => ({
+    id: Date.now(),
+    role: "bot",
+    content: t('welcomeMessage').replace('{department}', dept),
+  });
+
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([createWelcomeMessage(department)]);
@@ -147,7 +156,7 @@ export function ChatUI({ department }: { department: string }) {
       content: (
         <div className="flex items-center gap-2">
           <LoaderCircle className="animate-spin h-5 w-5" />
-          <span>Thinking...</span>
+          <span>{t('thinkingMessage')}</span>
         </div>
       ),
     };
@@ -256,11 +265,11 @@ export function ChatUI({ department }: { department: string }) {
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewChat}>
                     <PlusSquare />
-                    <span className="sr-only">New Chat</span>
+                    <span className="sr-only">{t('newChatTooltip')}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>New Chat</p>
+                  <p>{t('newChatTooltip')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -269,7 +278,7 @@ export function ChatUI({ department }: { department: string }) {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search history..."
+              placeholder={t('searchHistoryPlaceholder')}
               className="pl-8 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -297,14 +306,14 @@ export function ChatUI({ department }: { department: string }) {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>{t('deleteChatTitle')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete this chat session.
+                        {t('deleteChatDescription')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteChat(chat.id)}>Continue</AlertDialogAction>
+                      <AlertDialogCancel>{t('cancelButton')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteChat(chat.id)}>{t('continueButton')}</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -327,11 +336,11 @@ export function ChatUI({ department }: { department: string }) {
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSignOut}>
                     <LogOut />
-                    <span className="sr-only">Sign Out</span>
+                    <span className="sr-only">{t('signOutButton')}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Sign Out</p>
+                  <p>{t('signOutButton')}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -345,7 +354,7 @@ export function ChatUI({ department }: { department: string }) {
             <Button variant="ghost" size="icon" asChild>
               <Link href="/">
                 <ArrowLeft />
-                <span className="sr-only">Back</span>
+                <span className="sr-only">{t('backButtonSr')}</span>
               </Link>
             </Button>
           </div>
@@ -359,8 +368,23 @@ export function ChatUI({ department }: { department: string }) {
             </div>
           </div>
           <div className="w-10 flex items-center gap-2">
-          </div>{" "}
-          {/* Spacer */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Languages />
+                   <span className="sr-only">{t('languageSwitcherTooltip')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                  {t('english')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                  {t('vietnamese')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
 
         <main className="flex-1 overflow-hidden">
@@ -424,7 +448,7 @@ export function ChatUI({ department }: { department: string }) {
                   onClick={() => setAttachedFile(null)}
                 >
                   <X size={16} />
-                  <span className="sr-only">Remove attachment</span>
+                  <span className="sr-only">{t('removeAttachmentSr')}</span>
                 </Button>
               </div>
             )}
@@ -440,7 +464,7 @@ export function ChatUI({ department }: { department: string }) {
                 onClick={handleFileAttachClick}
               >
                 <Paperclip />
-                <span className="sr-only">Attach file</span>
+                <span className="sr-only">{t('attachFileSr')}</span>
               </Button>
               <input 
                 type="file" 
@@ -451,7 +475,7 @@ export function ChatUI({ department }: { department: string }) {
               />
               <Input
                 name="userInput"
-                placeholder="Type your question here..."
+                placeholder={t('chatInputPlaceholder')}
                 className="flex-1"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -468,6 +492,7 @@ export function ChatUI({ department }: { department: string }) {
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const { t } = useLanguage();
   return (
     <Button
       type="submit"
@@ -481,9 +506,7 @@ function SubmitButton() {
       ) : (
         <Send className="text-accent-foreground" />
       )}
-      <span className="sr-only">Send</span>
+      <span className="sr-only">{t('sendButtonSr')}</span>
     </Button>
   );
 }
-
-    
