@@ -62,6 +62,11 @@ export const translations = {
     languageSwitcherTooltip: "Change Language",
     vietnamese: "Vietnamese",
     english: "English",
+
+    // Auth Pages Header/Footer
+    companyName: "SaiGon Newport Corporation",
+    companyCorps: "20th Corps",
+    footerText: "© Copyright 2025 - SAIGON NEWPORT CORPORATION - IT Department",
   },
   vi: {
     // Login Page
@@ -126,6 +131,11 @@ export const translations = {
     languageSwitcherTooltip: "Đổi ngôn ngữ",
     vietnamese: "Tiếng Việt",
     english: "Tiếng Anh",
+
+    // Auth Pages Header/Footer
+    companyName: "Tổng Công Ty Tân cảng Sài Gòn",
+    companyCorps: "Binh Đoàn 20",
+    footerText: "Phòng Công nghệ thông tin",
   },
 };
 
