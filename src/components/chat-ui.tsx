@@ -353,12 +353,6 @@ export function ChatUI({ department }: { department: string }) {
         <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="md:hidden" />
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/">
-                <ArrowLeft />
-                <span className="sr-only">{t('backButtonSr')}</span>
-              </Link>
-            </Button>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8">
