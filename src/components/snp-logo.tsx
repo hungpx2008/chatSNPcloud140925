@@ -3,10 +3,11 @@ import Image from 'next/image';
 export function SnpLogo() {
   return (
     <Image
-      src="https://i.imgur.com/sC3a3L3.png"
+      //src="/snp-logo.png"
+      src="/logosnp.gif"
       alt="Saigon Newport Logo"
       width={80}
-      height={80}
+      height={100}
       className="h-full w-full"
     />
   );
