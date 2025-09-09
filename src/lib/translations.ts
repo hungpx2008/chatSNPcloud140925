@@ -135,7 +135,7 @@ export const translations = {
     // Auth Pages Header/Footer
     companyName: "Tổng Công Ty Tân cảng Sài Gòn",
     companyCorps: "Binh Đoàn 20",
-    footerText: "Phòng Công nghệ thông tin",
+    footerText: "© Bản quyền 2025 - TỔNG CÔNG TY TÂN CẢNG SÀI GÒN-Phòng CÔNG NGHỆ THÔNG TIN",
   },
 };
 
