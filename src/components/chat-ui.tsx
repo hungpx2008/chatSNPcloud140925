@@ -19,6 +19,7 @@ import {
   X,
   File as FileIcon,
   Trash2,
+  Settings,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 
@@ -68,6 +69,9 @@ import {
 } from "./ui/dropdown-menu";
 import { UsaFlagIcon } from "./usa-flag";
 import { VietnamFlagIcon } from "./vietnam-flag";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import { Label } from "./ui/label";
+import { Switch } from "./ui/switch";
 
 interface Message {
   id: number;
@@ -103,6 +107,8 @@ export function ChatUI({ department }: { department: string }) {
   const [input, setInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [useInternalData, setUseInternalData] = useState(true);
+  const [usePersonalData, setUsePersonalData] = useState(true);
   
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -363,7 +369,7 @@ export function ChatUI({ department }: { department: string }) {
               <p className="text-sm text-muted-foreground">{department}</p>
             </div>
           </div>
-          <div className="w-10 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12">
@@ -382,6 +388,38 @@ export function ChatUI({ department }: { department: string }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Settings />
+                  <span className="sr-only">{t('settings')}</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>{t('settings')}</SheetTitle>
+                </SheetHeader>
+                <div className="py-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="internal-data" className="flex-1">{t('internalData')}</Label>
+                    <Switch 
+                      id="internal-data" 
+                      checked={useInternalData}
+                      onCheckedChange={setUseInternalData}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="personal-data" className="flex-1">{t('personalData')}</Label>
+                    <Switch 
+                      id="personal-data"
+                      checked={usePersonalData}
+                      onCheckedChange={setUsePersonalData}
+                    />
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </header>
 
@@ -508,3 +546,5 @@ function SubmitButton() {
     </Button>
   );
 }
+
+    

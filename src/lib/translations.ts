@@ -1,3 +1,4 @@
+
 export const translations = {
   en: {
     // Login Page
@@ -37,7 +38,6 @@ export const translations = {
     searchHistoryPlaceholder: "Search history...",
     newChatTooltip: "New Chat",
     signOutTooltip: "Sign Out",
-    backButtonSr: "Back",
     thinkingMessage: "Thinking...",
     chatInputPlaceholder: "Type your question here...",
     attachFileSr: "Attach file",
@@ -47,6 +47,9 @@ export const translations = {
     deleteChatDescription: "This action cannot be undone. This will permanently delete this chat session.",
     cancelButton: "Cancel",
     continueButton: "Continue",
+    settings: "Settings",
+    internalData: "Internal Data",
+    personalData: "Personal Data",
     
     // Welcome Message
     welcomeMessage: "Hello! How can I help you in the {department} today?",
@@ -106,7 +109,6 @@ export const translations = {
     searchHistoryPlaceholder: "Tìm kiếm lịch sử...",
     newChatTooltip: "Trò chuyện mới",
     signOutTooltip: "Đăng xuất",
-    backButtonSr: "Quay lại",
     thinkingMessage: "Đang nghĩ...",
     chatInputPlaceholder: "Nhập câu hỏi của bạn ở đây...",
     attachFileSr: "Đính kèm tệp",
@@ -116,6 +118,9 @@ export const translations = {
     deleteChatDescription: "Hành động này không thể được hoàn tác. Thao tác này sẽ xóa vĩnh viễn phiên trò chuyện này.",
     cancelButton: "Hủy bỏ",
     continueButton: "Tiếp tục",
+    settings: "Cấu hình",
+    internalData: "Dữ liệu nội bộ",
+    personalData: "Dữ liệu cá nhân",
 
     // Welcome Message
     welcomeMessage: "Xin chào! Tôi có thể giúp gì cho bạn ở {department} hôm nay?",
@@ -140,3 +145,5 @@ export const translations = {
 };
 
 export type TranslationKey = keyof typeof translations.en;
+
+    
