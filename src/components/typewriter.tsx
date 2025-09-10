@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-export function Typewriter({ text, speed = 20 }: { text: string, speed?: number }) {
+export function Typewriter({ text, speed = 50 }: { text: string, speed?: number }) {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
@@ -22,5 +22,5 @@ export function Typewriter({ text, speed = 20 }: { text: string, speed?: number 
     }
   }, [text, speed]);
 
-  return <ReactMarkdown className="text-sm leading-relaxed">{displayedText}</ReactMarkdown>;
+  return <ReactMarkdown>{displayedText}</ReactMarkdown>;
 }

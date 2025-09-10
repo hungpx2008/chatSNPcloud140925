@@ -38,10 +38,12 @@ const contextualHelpPrompt = ai.definePrompt({
   output: {schema: ContextualHelpOutputSchema},
   prompt: `You are a chatbot assistant for the {{{department}}} department.
   Use your knowledge and the department context to answer the following question.
-
   Question: {{{question}}}
 
-  Please format your response using Markdown. Use line breaks, bullet points, or numbered lists to make the answer clear and easy to read.`,
+  Please format your response using Markdown. Present the document in a clear and professional format.
+	•	Use line breaks appropriately to enhance readability.
+	•	Apply bullet points for the main ideas.
+	•	When necessary, organize information using a numbered list for step-by-step clarity.`,
 });
 
 // Define the Genkit flow for contextual help.
