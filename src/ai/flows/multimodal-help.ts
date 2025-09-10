@@ -82,7 +82,7 @@ const multimodalHelpFlow = ai.defineFlow(
         try {
             const extracted = await extractTextFromFile(input.photoDataUri);
             if(extracted.type === 'document') {
-                fileContent = extracted.content;
+                fileContent = extracted.content || undefined; // Convert null to undefined
                 // It's a document, so don't pass it to the model as media
                 photoDataUri = undefined;
             }
