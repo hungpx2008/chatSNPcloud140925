@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useRef, useEffect, ReactNode } from "react";
@@ -269,7 +270,6 @@ export function ChatUI({ department }: { department: string }) {
       <Sidebar>
         <SidebarHeader>
           <div className="flex justify-between items-center mb-2">
-            <SidebarTrigger className="hidden md:flex" />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -360,7 +360,7 @@ export function ChatUI({ department }: { department: string }) {
       <SidebarInset className="flex flex-col h-screen">
         <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger />
           </div>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8">
@@ -548,3 +548,5 @@ function SubmitButton() {
     </Button>
   );
 }
+
+    
