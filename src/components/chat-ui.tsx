@@ -21,6 +21,8 @@ import {
   File as FileIcon,
   Trash2,
   Settings,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import ReactMarkdown from 'react-markdown';
@@ -43,6 +45,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  useSidebar,
 } from "./ui/sidebar";
 import {
   Tooltip,
@@ -95,6 +98,162 @@ interface AttachedFile {
   name: string;
   type: string;
 }
+
+function ChatSidebar() {
+  const { t } = useLanguage();
+  const { user } = useAuth();
+  const router = useRouter();
+  const { open: sidebarOpen, toggleSidebar } = useSidebar();
+  
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [department, setDepartment] = useState(""); // This will be set from parent
+
+  useEffect(() => {
+    // This effect can be used to load chat history, etc.
+    const urlParams = new URLSearchParams(window.location.search);
+    const dept = urlParams.get('department') || '';
+    setDepartment(dept);
+    if (dept) {
+        setMessages([createWelcomeMessage(dept)]);
+    }
+  }, []);
+  
+  const createWelcomeMessage = (dept: string): Message => ({
+    id: Date.now(),
+    role: "bot",
+    content: t('welcomeMessage').replace('{department}', dept),
+  });
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
+
+  const handleNewChat = () => {
+    setActiveChatId(null);
+    setMessages([createWelcomeMessage(department)]);
+  };
+
+  const handleSelectChat = (chatId: string) => {
+    const selectedChat = chatHistory.find(chat => chat.id === chatId);
+    if (selectedChat) {
+      setActiveChatId(selectedChat.id);
+      setMessages(selectedChat.messages);
+    }
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
+    if (activeChatId === chatId) {
+      handleNewChat();
+    }
+  };
+
+  const filteredHistory = chatHistory.filter((chat) =>
+    chat.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+     <Sidebar>
+        <SidebarHeader>
+          <div className="flex items-center justify-between mb-2">
+             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleSidebar}>
+              {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
+              <span className="sr-only">Toggle Sidebar</span>
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewChat}>
+                    <PlusSquare />
+                    <span className="sr-only">{t('newChatTooltip')}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('newChatTooltip')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t('searchHistoryPlaceholder')}
+              className="pl-8 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarMenu>
+            {filteredHistory.map((chat) => (
+              <SidebarMenuItem key={chat.id}>
+                <SidebarMenuButton 
+                  tooltip={chat.title} 
+                  size="sm" 
+                  className="w-full justify-start"
+                  isActive={chat.id === activeChatId}
+                  onClick={() => handleSelectChat(chat.id)}
+                >
+                  <span className="truncate flex-1 text-left">{chat.title}</span>
+                </SidebarMenuButton>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100">
+                      <Trash2 size={16} />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t('deleteChatTitle')}</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t('deleteChatDescription')}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t('cancelButton')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteChat(chat.id)}>{t('continueButton')}</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter>
+          <div className="flex items-center gap-2 p-2">
+            <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary text-primary-foreground">
+                    <User size={20} />
+                </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-medium truncate">{user?.email}</p>
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSignOut}>
+                    <LogOut />
+                    <span className="sr-only">{t('signOutButton')}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t('signOutButton')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </SidebarFooter>
+      </Sidebar>
+  )
+}
+
 
 export function ChatUI({ department }: { department: string }) {
   const { t, language, setLanguage } = useLanguage();
@@ -270,7 +429,8 @@ export function ChatUI({ department }: { department: string }) {
     <>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center justify-between">
+            <SidebarTrigger />
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -285,7 +445,7 @@ export function ChatUI({ department }: { department: string }) {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="relative">
+          <div className="relative mt-2">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
