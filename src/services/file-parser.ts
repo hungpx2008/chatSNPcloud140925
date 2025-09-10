@@ -1,10 +1,12 @@
+'use server';
+
 /**
  * @fileOverview A service to parse content from various file types.
  *
  * - `extractTextFromFile`: Extracts text from a file provided as a data URI.
  */
 
-import { fromBuffer } from 'file-type';
+import { fileTypeFromBuffer } from 'file-type';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 
@@ -23,7 +25,7 @@ type ParsedContent = {
  */
 export async function extractTextFromFile(dataUri: string): Promise<ParsedContent> {
   const buffer = Buffer.from(dataUri.split(',')[1], 'base64');
-  const fileType = await fromBuffer(buffer);
+  const fileType = await fileTypeFromBuffer(buffer);
 
   const mime = fileType?.mime;
 
