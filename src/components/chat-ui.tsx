@@ -674,14 +674,13 @@ export function ChatUI({ department }: { department: string }) {
             <form
               ref={formRef}
               action={handleFormSubmit}
-              className="flex gap-2 items-start"
+              className="flex gap-2 items-end"
             >
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={handleFileAttachClick}
-                className="mt-2"
               >
                 <Paperclip />
                 <span className="sr-only">{t('attachFileSr')}</span>
@@ -709,9 +708,7 @@ export function ChatUI({ department }: { department: string }) {
                   }
                 }}
               />
-              <div className="self-end">
-                <SubmitButton />
-              </div>
+              <SubmitButton />
             </form>
           </div>
         </footer>
