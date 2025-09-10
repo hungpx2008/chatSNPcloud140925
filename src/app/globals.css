@@ -85,4 +85,33 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+  .prose {
+    @apply text-foreground;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply text-foreground;
+  }
+
+  .prose strong {
+    @apply text-foreground;
+  }
+
+  .prose blockquote {
+    @apply border-l-border;
+    @apply text-muted-foreground;
+  }
+
+  .prose code {
+    @apply text-foreground;
+  }
+
+  .prose a {
+    @apply text-primary;
+  }
 }

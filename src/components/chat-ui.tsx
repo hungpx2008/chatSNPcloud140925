@@ -22,6 +22,8 @@ import {
   Settings,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
+import ReactMarkdown from 'react-markdown';
+
 
 import { getHelp } from "@/app/actions";
 import { Input } from "@/components/ui/input";
@@ -443,14 +445,14 @@ export function ChatUI({ department }: { department: string }) {
                   )}
                   <div
                     className={cn(
-                      "p-3 rounded-2xl max-w-sm md:max-w-md lg:max-w-lg shadow-sm",
+                      "p-3 rounded-2xl max-w-sm md:max-w-md lg:max-w-lg shadow-sm prose prose-sm",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-none"
                         : "bg-card border rounded-bl-none"
                     )}
                   >
                     {typeof message.content === "string" ? (
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <ReactMarkdown className="text-sm leading-relaxed">{message.content}</ReactMarkdown>
                     ) : (
                       message.content
                     )}
@@ -546,5 +548,3 @@ function SubmitButton() {
     </Button>
   );
 }
-
-    
