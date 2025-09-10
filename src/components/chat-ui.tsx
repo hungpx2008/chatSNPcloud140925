@@ -75,6 +75,7 @@ import { VietnamFlagIcon } from "./vietnam-flag";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Typewriter } from "./typewriter";
 
 interface Message {
   id: number;
@@ -428,7 +429,7 @@ export function ChatUI({ department }: { department: string }) {
         <main className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4 space-y-6">
-              {messages.map((message) => (
+              {messages.map((message, index) => (
                 <div
                   key={message.id}
                   className={cn(
@@ -452,7 +453,11 @@ export function ChatUI({ department }: { department: string }) {
                     )}
                   >
                     {typeof message.content === "string" ? (
-                      <ReactMarkdown className="text-sm leading-relaxed">{message.content}</ReactMarkdown>
+                      (message.role === "bot" && index === messages.length - 1) ? (
+                        <Typewriter text={message.content} />
+                      ) : (
+                        <ReactMarkdown className="text-sm leading-relaxed">{message.content}</ReactMarkdown>
+                      )
                     ) : (
                       message.content
                     )}
@@ -548,5 +553,3 @@ function SubmitButton() {
     </Button>
   );
 }
-
-    
