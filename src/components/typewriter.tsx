@@ -22,5 +22,5 @@ export function Typewriter({ text, speed = 50 }: { text: string, speed?: number 
     }
   }, [text, speed]);
 
-  return <div className="prose prose-sm max-w-none prose-p:text-sm prose-p:leading-relaxed"><ReactMarkdown>{displayedText}</ReactMarkdown></div>;
+  return <div className="prose prose-sm max-w-none"><ReactMarkdown>{displayedText}</ReactMarkdown></div>;
 }

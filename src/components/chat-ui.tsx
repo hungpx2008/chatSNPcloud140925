@@ -609,9 +609,9 @@ export function ChatUI({ department }: { department: string }) {
                   )}
                   <div
                     className={cn(
-                      "p-3 rounded-2xl shadow-sm prose prose-sm max-w-none prose-p:text-sm prose-p:leading-relaxed",
+                      "p-3 rounded-2xl shadow-sm prose prose-sm max-w-none",
                       message.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-none prose-p:text-primary-foreground"
+                        ? "bg-primary text-primary-foreground rounded-br-none"
                         : "bg-card border rounded-bl-none"
                     )}
                   >
