@@ -427,7 +427,7 @@ export function ChatUI({ department }: { department: string }) {
 
         <main className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="p-4 space-y-6 max-w-3xl mx-auto">
+            <div className="p-4 space-y-6">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -445,7 +445,7 @@ export function ChatUI({ department }: { department: string }) {
                   )}
                   <div
                     className={cn(
-                      "p-3 rounded-2xl shadow-sm prose prose-sm",
+                      "p-3 rounded-2xl shadow-sm prose prose-sm max-w-none",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-none"
                         : "bg-card border rounded-bl-none"
