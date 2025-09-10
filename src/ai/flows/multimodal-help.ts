@@ -51,6 +51,7 @@ const multimodalHelpPrompt = ai.definePrompt({
   prompt: `You are a chatbot assistant for the {{{department}}} department.
   Use your knowledge, the department context, and the provided image or file content (if any) to answer the following question.
   Please format your response using Markdown. Use line breaks, bullet points, or numbered lists to make the answer clear and easy to read.
+  If a table is required, ensure it is formatted using valid Markdown table syntax. Do not include any conversational text before or after the table itself.
 
   Question:
   {{{question}}}
