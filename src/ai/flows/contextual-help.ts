@@ -15,14 +15,14 @@ import {z} from 'genkit';
 
 // Define the input schema for the contextual help flow.
 const ContextualHelpInputSchema = z.object({
-  question: z.string().describe('The user\u2019s question.'),
+  question: z.string().describe('The user’s question.'),
   department: z.string().describe('The department selected by the user.'),
 });
 export type ContextualHelpInput = z.infer<typeof ContextualHelpInputSchema>;
 
 // Define the output schema for the contextual help flow.
 const ContextualHelpOutputSchema = z.object({
-  response: z.string().describe('The chatbot\u2019s contextually relevant response.'),
+  response: z.string().describe('The chatbot’s contextually relevant response.'),
 });
 export type ContextualHelpOutput = z.infer<typeof ContextualHelpOutputSchema>;
 
@@ -37,8 +37,11 @@ const contextualHelpPrompt = ai.definePrompt({
   input: {schema: ContextualHelpInputSchema},
   output: {schema: ContextualHelpOutputSchema},
   prompt: `You are a chatbot assistant for the {{{department}}} department.
-  Use your knowledge and the department context to answer the following question:
-  {{{question}}}`,
+  Use your knowledge and the department context to answer the following question.
+
+  Question: {{{question}}}
+
+  Please format your response using Markdown. Use line breaks, bullet points, or numbered lists to make the answer clear and easy to read.`,
 });
 
 // Define the Genkit flow for contextual help.
