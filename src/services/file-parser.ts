@@ -7,7 +7,7 @@
  */
 
 import { fileTypeFromBuffer } from 'file-type';
-import pdf from 'pdf-parse';
+import PDFParser from 'node-pdf-parser';
 import mammoth from 'mammoth';
 
 type ParsedContent = {
@@ -34,8 +34,17 @@ export async function extractTextFromFile(dataUri: string): Promise<ParsedConten
   }
 
   if (mime === 'application/pdf') {
-    const data = await pdf(buffer);
-    return { type: 'document', content: data.text };
+    try {
+        const pdfParser = new PDFParser(buffer);
+        const isParsed = await pdfParser.pdfParser_dataReady();
+        if (isParsed) {
+            return { type: 'document', content: pdfParser.getRawTextContent() };
+        }
+        return { type: 'document', content: '' };
+    } catch(err) {
+        console.error("Error parsing PDF", err);
+        throw new Error("Could not parse PDF file.")
+    }
   }
 
   if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
