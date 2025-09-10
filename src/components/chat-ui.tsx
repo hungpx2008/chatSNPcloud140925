@@ -79,6 +79,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Typewriter } from "./typewriter";
+import { Textarea } from "./ui/textarea";
 
 interface Message {
   id: number;
@@ -277,12 +278,21 @@ export function ChatUI({ department }: { department: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [input]);
 
   const renderAttachedFile = (file: AttachedFile, size: 'sm' | 'lg'): ReactNode => {
     const isImage = file.type.startsWith('image/');
@@ -338,6 +348,9 @@ export function ChatUI({ department }: { department: string }) {
 
     formRef.current?.reset();
     setInput("");
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+    }
     const fileToSend = attachedFile;
     setAttachedFile(null);
 
@@ -661,13 +674,14 @@ export function ChatUI({ department }: { department: string }) {
             <form
               ref={formRef}
               action={handleFormSubmit}
-              className="flex gap-2"
+              className="flex gap-2 items-start"
             >
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={handleFileAttachClick}
+                className="mt-2"
               >
                 <Paperclip />
                 <span className="sr-only">{t('attachFileSr')}</span>
@@ -679,15 +693,25 @@ export function ChatUI({ department }: { department: string }) {
                 onChange={handleFileChange} 
                 accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" 
               />
-              <Input
+              <Textarea
+                ref={textareaRef}
                 name="userInput"
                 placeholder={t('chatInputPlaceholder')}
-                className="flex-1"
+                className="flex-1 resize-none max-h-48"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 autoComplete="off"
+                rows={1}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    formRef.current?.requestSubmit();
+                  }
+                }}
               />
-              <SubmitButton />
+              <div className="self-end">
+                <SubmitButton />
+              </div>
             </form>
           </div>
         </footer>
