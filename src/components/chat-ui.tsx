@@ -430,7 +430,7 @@ export function ChatUI({ department }: { department: string }) {
     <>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <SidebarTrigger />
             <TooltipProvider>
               <Tooltip>
@@ -446,7 +446,7 @@ export function ChatUI({ department }: { department: string }) {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="relative mt-2">
+          <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
