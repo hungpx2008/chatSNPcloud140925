@@ -472,7 +472,7 @@ export function ChatUI({ department }: { department: string }) {
         </main>
 
         <footer className="p-4 border-t bg-card">
-          <div className="max-w-3xl mx-auto">
+          <div className="mx-auto">
              {attachedFile && (
               <div className="relative mb-2 w-fit">
                 <div className="p-2 border rounded-lg">
@@ -509,7 +509,7 @@ export function ChatUI({ department }: { department: string }) {
                 ref={fileInputRef} 
                 className="hidden" 
                 onChange={handleFileChange} 
-                accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain" 
+                accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" 
               />
               <Input
                 name="userInput"
@@ -548,5 +548,3 @@ function SubmitButton() {
     </Button>
   );
 }
-
-    
