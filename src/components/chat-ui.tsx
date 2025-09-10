@@ -257,6 +257,7 @@ function ChatSidebar() {
 
 export function ChatUI({ department }: { department: string }) {
   const { t, language, setLanguage } = useLanguage();
+  const { open: sidebarOpen } = useSidebar();
 
   const createWelcomeMessage = (dept: string): Message => ({
     id: Date.now(),
@@ -521,7 +522,9 @@ export function ChatUI({ department }: { department: string }) {
       <SidebarInset className="flex flex-col h-screen">
         <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm">
           <div className="flex items-center gap-2">
-            <SidebarTrigger />
+            <div className={cn(sidebarOpen && "md:hidden")}>
+              <SidebarTrigger />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="h-8 w-8">
@@ -713,3 +716,5 @@ function SubmitButton() {
     </Button>
   );
 }
+
+    
