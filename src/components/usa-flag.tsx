@@ -1,52 +1,113 @@
-export function UsaFlagIcon({ className }: { className?: string }) {
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Logo } from "./logo";
+import { LoaderCircle } from "lucide-react";
+import { useLanguage } from "./language-provider";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { UkFlagIcon } from "./uk-flag";
+import { VietnamFlagIcon } from "./vietnam-flag";
+
+
+export function SignupForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      router.push("/");
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 1235 650"
-      className={className}
-      width="36"
-      height="19"
-    >
-      <rect width="1235" height="650" fill="#FFF" />
-      <path
-        d="M0 0h1235v50H0zM0 100h1235v50H0zM0 200h1235v50H0zM0 300h1235v50H0zM0 400h1235v50H0zM0 500h1235v50H0zM0 600h1235v50H0z"
-        fill="#B22234"
-      />
-      <rect width="494" height="350" fill="#3C3B6E" />
-      <g fill="#FFF">
-        <g id="s5">
-          <g id="s4">
-            <path id="s" d="M117.5 0l25 80-65-50h80l-65 50z" />
-            <use href="#s" x="82.333" />
-          </g>
-          <use href="#s4" x="164.666" />
-        </g>
-        <g id="r6">
-          <use href="#s5" y="29.167" />
-          <use href="#s" x="41.167" y="29.167" />
-        </g>
-        <g id="r5">
-          <use href="#s5" x="41.167" y="58.333" />
-        </g>
-        <g id="r4">
-          <use href="#r6" y="58.333" />
-        </g>
-        <g id="r3">
-          <use href="#r5" y="58.333" />
-        </g>
-        <g id="r2">
-          <use href="#r4" y="58.333" />
-        </g>
-        <use href="#r6" transform="translate(41.167 29.167)" />
-        <use href="#r5" transform="translate(0 58.333)" />
-        <use href="#r6" transform="translate(41.167 87.5)" />
-        <use href="#r5" transform="translate(0 116.666)" />
-        <use href="#r6" transform="translate(41.167 145.833)" />
-        <use href="#r5" transform="translate(0 175)" />
-        <use href="#r6" transform="translate(41.167 204.167)" />
-        <use href="#r5" transform="translate(0 233.333)" />
-        <use href="#r6" transform="translate(41.167 262.5)" />
-      </g>
-    </svg>
+    <Card className="w-full max-w-md shadow-2xl">
+      <CardHeader className="items-center text-center">
+        <div className="absolute top-4 right-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-12 w-12">
+                {language === 'en' ? <UkFlagIcon className="h-8 w-8" /> : <VietnamFlagIcon className="h-8 w-8" />}
+                <span className="sr-only">{t('languageSwitcherTooltip')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
+                <UkFlagIcon className="mr-2 h-5 w-5" />
+                {t('english')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
+                <VietnamFlagIcon className="mr-2 h-5 w-5" />
+                {t('vietnamese')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="h-16 w-16">
+          <Logo />
+        </div>
+        <CardTitle className="text-3xl font-bold pt-4">{t('signupTitle')}</CardTitle>
+        <CardDescription>{t('signupDescription')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">{t('emailLabel')}</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder={t('emailPlaceholder')}
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">{t('passwordLabel')}</Label>
+            <Input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={loading}>
+            {loading ? <LoaderCircle className="animate-spin" /> : t('signupButton')}
+          </Button>
+        </form>
+        <div className="mt-4 text-center text-sm">
+          {t('haveAccountPrompt')}{' '}
+          <Link href="/login" passHref>
+            <Button variant="link" className="p-0 h-auto">{t('loginTitle')}</Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

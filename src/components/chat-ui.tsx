@@ -73,7 +73,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { UsaFlagIcon } from "./usa-flag";
+import { UkFlagIcon } from "./uk-flag";
 import { VietnamFlagIcon } from "./vietnam-flag";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Label } from "./ui/label";
@@ -552,13 +552,13 @@ export function ChatUI({ department }: { department: string }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-12 w-12">
-                  {language === 'en' ? <UsaFlagIcon className="h-8 w-8" /> : <VietnamFlagIcon className="h-8 w-8" />}
+                  {language === 'en' ? <UkFlagIcon className="h-8 w-8" /> : <VietnamFlagIcon className="h-8 w-8" />}
                    <span className="sr-only">{t('languageSwitcherTooltip')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setLanguage('en')} disabled={language === 'en'}>
-                  <UsaFlagIcon className="mr-2 h-5 w-5" />
+                  <UkFlagIcon className="mr-2 h-5 w-5" />
                   {t('english')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLanguage('vi')} disabled={language === 'vi'}>
