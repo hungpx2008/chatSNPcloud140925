@@ -630,7 +630,7 @@ export function ChatUI({ department }: { department: string }) {
                   >
                     {typeof message.content === "string" ? (
                       (message.role === "bot" && index === messages.length - 1) ? (
-                        <Typewriter text={message.content} />
+                        <Typewriter text={message.content} speed={25} />
                       ) : (
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       )

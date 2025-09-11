@@ -98,6 +98,11 @@ const multimodalHelpFlow = ai.defineFlow(
         photoDataUri: photoDataUri,
         fileContent: fileContent,
     });
-    return output!;
+    
+    if (!output || !output.response) {
+      return { response: "I'm sorry, I couldn't generate a response. Please try again." };
+    }
+
+    return output;
   }
 );
