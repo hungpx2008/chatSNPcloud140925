@@ -497,7 +497,7 @@ export function ChatUI({ department }: { department: string }) {
                     {typeof message.content === "string" ? (
                         message.role === 'bot' ? (
                             (index === messages.length - 1 && !message.content.includes('<table')) ? (
-                                <Typewriter text={message.content} speed={20} />
+                                <Typewriter text={message.content} speed={5} />
                             ) : (
                                 <LLMResponseRenderer content={message.content} />
                             )
