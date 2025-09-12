@@ -95,8 +95,22 @@
       @apply border-l-border text-muted-foreground;
     }
 
+    /* Inline code */
     code {
       @apply text-foreground;
+    }
+
+    /* Code blocks */
+    pre {
+      @apply bg-muted/50 p-4 rounded-md;
+    }
+
+    pre code {
+      @apply text-muted-foreground bg-transparent p-0;
+    }
+    
+    .dark pre code {
+        @apply text-secondary-foreground;
     }
 
     a {
