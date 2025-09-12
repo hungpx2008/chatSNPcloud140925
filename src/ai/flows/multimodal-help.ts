@@ -39,8 +39,11 @@ export async function getMultimodalHelp(input: MultimodalHelpInput): Promise<Mul
 }
 
 // Define the prompt to generate contextually relevant responses.
-const multimodalHelpPrompt = ai.definePrompt({
+const multimodalHelpPrompt = async () => {
+  const ai = await getGenkitAI();
+  return ai.definePrompt({
   name: 'multimodalHelpPrompt',
+  model: 'openai/Arcee-VyLinh-GGUF',
   input: {schema: z.object({
     question: z.string(),
     department: z.string(),
@@ -65,46 +68,48 @@ const multimodalHelpPrompt = ai.definePrompt({
   ---
   {{{fileContent}}}
   ---
-  {{/if}}
-  `,
+  {{/if}}`,
 });
 
 // Define the Genkit flow for multimodal help.
-const multimodalHelpFlow = ai.defineFlow(
-  {
-    name: 'multimodalHelpFlow',
-    inputSchema: MultimodalHelpInputSchema,
-    outputSchema: MultimodalHelpOutputSchema,
-  },
-  async input => {
-    let fileContent: string | undefined = undefined;
-    let photoDataUri = input.photoDataUri;
+const multimodalHelpFlow = async (input: MultimodalHelpInput) => {
+  const ai = await getGenkitAI();
+  const prompt = await multimodalHelpPrompt(); // Get the prompt definition
+  return ai.defineFlow(
+    {
+      name: 'multimodalHelpFlow',
+      inputSchema: MultimodalHelpInputSchema,
+      outputSchema: MultimodalHelpOutputSchema,
+    },
+    async (input: MultimodalHelpInput) => {
+      let fileContent: string | undefined = undefined;
+      let photoDataUri = input.photoDataUri;
 
-    if (input.photoDataUri) {
+      if (input.photoDataUri) {
         try {
-            const extracted = await extractTextFromFile(input.photoDataUri);
-            if(extracted.type === 'document') {
-                fileContent = extracted.content || undefined; // Convert null to undefined
-                // It's a document, so don't pass it to the model as media
-                photoDataUri = undefined;
-            } else if (extracted.type === 'audio') {
-              // It's audio, pass it as media and don't extract text
-              fileContent = undefined;
-            } else if (extracted.type === 'image') {
-              // It's an image, pass it as media
-              fileContent = undefined;
-            }
+          const extracted = await extractTextFromFile(input.photoDataUri);
+          if (extracted.type === 'document') {
+            fileContent = extracted.content || undefined; // Convert null to undefined
+            // It's a document, so don't pass it to the model as media
+            photoDataUri = undefined;
+          } else if (extracted.type === 'audio') {
+            // It's audio, pass it as media and don't extract text
+            fileContent = undefined;
+          } else if (extracted.type === 'image') {
+            // It's an image, pass it as media
+            fileContent = undefined;
+          }
         } catch (error) {
-            console.error("Could not parse file content, proceeding without it.", error);
-            // If parsing fails, we can just treat it as a potential image or ignore it.
+          console.error("Could not parse file content, proceeding without it.", error);
+          // If parsing fails, we can just treat it as a potential image or ignore it.
         }
-    }
+      }
 
-    const {output} = await multimodalHelpPrompt({
-        ...input,
-        photoDataUri: photoDataUri,
-        fileContent: fileContent,
-    });
-    return output!;
-  }
-);
+      const { output } = await prompt(
+        { ...input, photoDataUri, fileContent },
+        { model: 'openai/Arcee-VyLinh-GGUF' },
+      );
+      return output!;
+    }
+  );
+};

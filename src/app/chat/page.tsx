@@ -5,9 +5,9 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 export default async function ChatPage({
   searchParams,
 }: {
-  searchParams: { department?: string };
+  searchParams: Promise<{ department?: string }>;
 }) {
-  const department = searchParams.department;
+  const { department } = await searchParams;
 
   if (!department) {
     redirect("/");
