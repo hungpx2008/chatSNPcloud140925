@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 
-export function Typewriter({ text, speed = 50 }: { text: string, speed?: number }) {
+export function Typewriter({ text, speed = 20 }: { text: string, speed?: number }) {
   const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
