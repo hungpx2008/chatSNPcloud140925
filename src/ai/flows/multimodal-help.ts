@@ -49,7 +49,7 @@ const multimodalHelpPrompt = ai.definePrompt({
   })},
   output: {schema: MultimodalHelpOutputSchema},
   prompt: `You are a chatbot assistant for the {{{department}}} department.
-  Use your knowledge, the department context, and the provided image or file content (if any) to answer the following question.
+  Use your knowledge, the department context, and the provided image, audio, or file content (if any) to answer the following question.
   Please format your response using Markdown for text styling like bold, italics, and lists.
   However, if a table is required, you MUST format it using valid HTML table syntax (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags).
   Do not include any conversational text before or after the HTML table itself. The table should be a standalone block.
@@ -57,7 +57,7 @@ const multimodalHelpPrompt = ai.definePrompt({
   Question:
   {{{question}}}
   {{#if photoDataUri}}
-  Image context:
+  Media context (image or audio):
   {{media url=photoDataUri}}
   {{/if}}
   {{#if fileContent}}
@@ -87,6 +87,12 @@ const multimodalHelpFlow = ai.defineFlow(
                 fileContent = extracted.content || undefined; // Convert null to undefined
                 // It's a document, so don't pass it to the model as media
                 photoDataUri = undefined;
+            } else if (extracted.type === 'audio') {
+              // It's audio, pass it as media and don't extract text
+              fileContent = undefined;
+            } else if (extracted.type === 'image') {
+              // It's an image, pass it as media
+              fileContent = undefined;
             }
         } catch (error) {
             console.error("Could not parse file content, proceeding without it.", error);

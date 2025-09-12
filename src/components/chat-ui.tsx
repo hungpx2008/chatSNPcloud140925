@@ -497,7 +497,7 @@ export function ChatUI({ department }: { department: string }) {
                     {typeof message.content === "string" ? (
                         message.role === 'bot' ? (
                             (index === messages.length - 1 && !message.content.includes('<table')) ? (
-                                <Typewriter text={message.content} speed={5} />
+                                <Typewriter text={message.content} speed={20} />
                             ) : (
                                 <LLMResponseRenderer content={message.content} />
                             )
@@ -560,7 +560,7 @@ export function ChatUI({ department }: { department: string }) {
                 ref={fileInputRef} 
                 className="hidden" 
                 onChange={handleFileChange} 
-                accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" 
+                accept="image/*,application/pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.openxmlformats-officedocument.presentationml.presentation,audio/*"
               />
               <Textarea
                 ref={textareaRef}
