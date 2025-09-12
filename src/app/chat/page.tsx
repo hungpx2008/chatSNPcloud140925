@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { ChatUI } from "@/components/chat-ui";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-export default function ChatPage({
+export default async function ChatPage({
   searchParams,
 }: {
   searchParams: { department?: string };
