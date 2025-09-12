@@ -7,7 +7,7 @@ export function AuthHeader() {
   const { t } = useLanguage();
   return (
     <div className="absolute top-8 left-8 flex items-center gap-4">
-      <div className="h-20 w-20">
+      <div className="h-20 w-16">
         <SnpLogo />
       </div>
       <div>
