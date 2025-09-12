@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
     --background: 216 28% 95%;
@@ -42,6 +38,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -76,9 +73,7 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -87,45 +82,39 @@ body {
   }
   .prose {
     @apply text-foreground;
-  }
 
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    @apply text-foreground;
-  }
+    h1, h2, h3, h4, h5, h6 {
+      @apply text-foreground;
+    }
 
-  .prose strong {
-    @apply text-foreground;
-  }
+    strong {
+      @apply text-foreground;
+    }
 
-  .prose blockquote {
-    @apply border-l-border;
-    @apply text-muted-foreground;
-  }
+    blockquote {
+      @apply border-l-border text-muted-foreground;
+    }
 
-  .prose code {
-    @apply text-foreground;
-  }
+    code {
+      @apply text-foreground;
+    }
 
-  .prose a {
-    @apply text-primary;
-  }
+    a {
+      @apply text-primary;
+    }
 
-  /* Force table styles inside prose */
-  .prose table {
-    @apply w-full my-4 border-collapse border border-border;
-  }
-  .prose th, .prose td {
-    @apply border border-border px-4 py-2 text-left;
-  }
-  .prose th {
-    @apply font-semibold bg-muted;
-  }
-  .prose tr:nth-child(even) {
-    @apply bg-card;
+    /* Force table styles inside prose */
+    table {
+      @apply w-full my-4 border-collapse border border-border;
+    }
+    th, td {
+      @apply border border-border px-4 py-2 text-left text-foreground;
+    }
+    th {
+      @apply font-semibold bg-muted;
+    }
+    tr:nth-child(even) {
+      @apply bg-card;
+    }
   }
 }

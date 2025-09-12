@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useRef, useEffect, ReactNode } from "react";
@@ -73,13 +72,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { UkFlagIcon } from "./uk-flag1";
+import { UkFlagIcon } from "./uk-flag";
 import { VietnamFlagIcon } from "./vietnam-flag";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Typewriter } from "./typewriter";
 import { Textarea } from "./ui/textarea";
+import { AutoTable } from "./ui/auto-table";
 
 interface Message {
   id: number;
@@ -100,160 +100,25 @@ interface AttachedFile {
   type: string;
 }
 
-function ChatSidebar() {
-  const { t } = useLanguage();
-  const { user } = useAuth();
-  const router = useRouter();
-  const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  
-  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [department, setDepartment] = useState(""); // This will be set from parent
+const LLMResponseRenderer = ({ content }: { content: string }) => {
+    // Split content by table tags, but keep the tags
+    const parts = content.split(/(<table[\s\S]*?<\/table>)/g);
 
-  useEffect(() => {
-    // This effect can be used to load chat history, etc.
-    const urlParams = new URLSearchParams(window.location.search);
-    const dept = urlParams.get('department') || '';
-    setDepartment(dept);
-    if (dept) {
-        setMessages([createWelcomeMessage(dept)]);
-    }
-  }, []);
-  
-  const createWelcomeMessage = (dept: string): Message => ({
-    id: Date.now(),
-    role: "bot",
-    content: t('welcomeMessage').replace('{department}', dept),
-  });
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    router.push('/login');
-  };
-
-  const handleNewChat = () => {
-    setActiveChatId(null);
-    setMessages([createWelcomeMessage(department)]);
-  };
-
-  const handleSelectChat = (chatId: string) => {
-    const selectedChat = chatHistory.find(chat => chat.id === chatId);
-    if (selectedChat) {
-      setActiveChatId(selectedChat.id);
-      setMessages(selectedChat.messages);
-    }
-  };
-
-  const handleDeleteChat = (chatId: string) => {
-    setChatHistory(prev => prev.filter(chat => chat.id !== chatId));
-    if (activeChatId === chatId) {
-      handleNewChat();
-    }
-  };
-
-  const filteredHistory = chatHistory.filter((chat) =>
-    chat.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-     <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center justify-between mb-2">
-             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={toggleSidebar}>
-              {sidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-              <span className="sr-only">Toggle Sidebar</span>
-            </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNewChat}>
-                    <PlusSquare />
-                    <span className="sr-only">{t('newChatTooltip')}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('newChatTooltip')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={t('searchHistoryPlaceholder')}
-              className="pl-8 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {filteredHistory.map((chat) => (
-              <SidebarMenuItem key={chat.id}>
-                <SidebarMenuButton 
-                  tooltip={chat.title} 
-                  size="sm" 
-                  className="w-full justify-start"
-                  isActive={chat.id === activeChatId}
-                  onClick={() => handleSelectChat(chat.id)}
-                >
-                  <span className="truncate flex-1 text-left">{chat.title}</span>
-                </SidebarMenuButton>
-                 <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100">
-                      <Trash2 size={16} />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>{t('deleteChatTitle')}</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {t('deleteChatDescription')}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>{t('cancelButton')}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteChat(chat.id)}>{t('continueButton')}</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-          <div className="flex items-center gap-2 p-2">
-            <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                    <User size={20} />
-                </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">{user?.email}</p>
-            </div>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSignOut}>
-                    <LogOut />
-                    <span className="sr-only">{t('signOutButton')}</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{t('signOutButton')}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-  )
-}
+    return (
+        <div>
+            {parts.map((part, index) => {
+                if (part.trim().startsWith('<table')) {
+                    return <AutoTable key={index} htmlString={part} />;
+                }
+                // Render non-table parts with Markdown, only if they contain non-whitespace characters
+                if (part.trim()) {
+                  return <ReactMarkdown key={index}>{part}</ReactMarkdown>;
+                }
+                return null;
+            })}
+        </div>
+    );
+};
 
 
 export function ChatUI({ department }: { department: string }) {
@@ -623,19 +488,24 @@ export function ChatUI({ department }: { department: string }) {
                   <div
                     className={cn(
                       "p-3 rounded-2xl shadow-sm prose prose-sm max-w-none",
+                      "prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2", // Adjust prose margins
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-none"
                         : "bg-card border rounded-bl-none"
                     )}
                   >
                     {typeof message.content === "string" ? (
-                      (message.role === "bot" && index === messages.length - 1) ? (
-                        <Typewriter text={message.content} speed={25} />
-                      ) : (
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      )
+                        message.role === 'bot' ? (
+                            (index === messages.length - 1 && !message.content.includes('<table')) ? (
+                                <Typewriter text={message.content} speed={20} />
+                            ) : (
+                                <LLMResponseRenderer content={message.content} />
+                            )
+                        ) : (
+                            <ReactMarkdown>{message.content}</ReactMarkdown>
+                        )
                     ) : (
-                      message.content
+                        message.content
                     )}
                   </div>
                   {message.role === "user" && (
@@ -737,3 +607,5 @@ function SubmitButton() {
     </Button>
   );
 }
+
+    

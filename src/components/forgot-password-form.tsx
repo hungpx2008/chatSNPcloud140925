@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { UkFlagIcon } from "./uk-flag1";
+import { UkFlagIcon } from "./uk-flag";
 import { VietnamFlagIcon } from "./vietnam-flag";
 
 export function ForgotPasswordForm() {

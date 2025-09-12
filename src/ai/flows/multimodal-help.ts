@@ -50,8 +50,9 @@ const multimodalHelpPrompt = ai.definePrompt({
   output: {schema: MultimodalHelpOutputSchema},
   prompt: `You are a chatbot assistant for the {{{department}}} department.
   Use your knowledge, the department context, and the provided image or file content (if any) to answer the following question.
-  Please format your response using Markdown. Use line breaks, bullet points, or numbered lists to make the answer clear and easy to read.
-  If a table is required, ensure it is formatted using valid Markdown table syntax. Do not include any conversational text before or after the table itself.
+  Please format your response using Markdown for text styling like bold, italics, and lists.
+  However, if a table is required, you MUST format it using valid HTML table syntax (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags).
+  Do not include any conversational text before or after the HTML table itself. The table should be a standalone block.
 
   Question:
   {{{question}}}
@@ -98,11 +99,6 @@ const multimodalHelpFlow = ai.defineFlow(
         photoDataUri: photoDataUri,
         fileContent: fileContent,
     });
-    
-    if (!output || !output.response) {
-      return { response: "I'm sorry, I couldn't generate a response. Please try again." };
-    }
-
-    return output;
+    return output!;
   }
 );

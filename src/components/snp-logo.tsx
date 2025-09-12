@@ -6,7 +6,7 @@ export function SnpLogo() {
       //src="/snp-logo.png"
       src="/logosnp.gif"
       alt="Saigon Newport Logo"
-      width={80}
+      width={100}
       height={100}
       className="h-full w-full"
     />

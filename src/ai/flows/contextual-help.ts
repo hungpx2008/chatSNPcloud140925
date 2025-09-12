@@ -40,11 +40,9 @@ const contextualHelpPrompt = ai.definePrompt({
   Use your knowledge and the department context to answer the following question.
   Question: {{{question}}}
 
-  Please format your response using Markdown. Present the document in a clear and professional format.
-	•	Use line breaks appropriately to enhance readability.
-	•	Apply bullet points for the main ideas.
-	•	When necessary, organize information using a numbered list for step-by-step clarity.
-  • If a table is required, ensure it is formatted using valid Markdown table syntax. Do not include any text before or after the table itself.`,
+  Please format your response using Markdown for text styling like bold, italics, and lists.
+  However, if a table is required, you MUST format it using valid HTML table syntax (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags).
+  Do not include any conversational text before or after the HTML table itself. The table should be a standalone block.`,
 });
 
 // Define the Genkit flow for contextual help.
@@ -56,11 +54,6 @@ const contextualHelpFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await contextualHelpPrompt(input);
-    
-    if (!output || !output.response) {
-      return { response: "I'm sorry, I couldn't generate a response. Please try again." };
-    }
-    
-    return output;
+    return output!;
   }
 );
