@@ -9,7 +9,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-blue-100 via-blue-200 to-cyan-200 text-blue-900">
        <div className="absolute top-8 left-8 flex items-center gap-4">
-          <div className="h-16 w-16">
+          <div className="h-20 w-20">
             <SnpLogo />
           </div>
           <div>
