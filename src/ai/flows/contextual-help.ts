@@ -1,59 +1,48 @@
 'use server';
 
-/**
- * @fileOverview This file defines a Genkit flow for providing contextual help in a chatbot application,
- *               tailoring responses based on the selected department.
- *
- * - `getContextualHelp`: A function that takes a user's question and the selected department
- *                         and returns a contextually relevant response.
- * - `ContextualHelpInput`: The input type for the `getContextualHelp` function, including the user's question and department.
- * - `ContextualHelpOutput`: The output type for the `getContextualHelp` function, containing the chatbot's response.
- */
+import { z } from 'zod';
+import { localOpenAI, LOCAL_LLM_MODEL } from '@/ai/localClient';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-// Define the input schema for the contextual help flow.
 const ContextualHelpInputSchema = z.object({
-  question: z.string().describe('The user’s question.'),
-  department: z.string().describe('The department selected by the user.'),
+  question: z.string().min(1).describe('The user’s question.'),
+  department: z.string().min(1).describe('The department selected by the user.'),
 });
 export type ContextualHelpInput = z.infer<typeof ContextualHelpInputSchema>;
 
-// Define the output schema for the contextual help flow.
 const ContextualHelpOutputSchema = z.object({
   response: z.string().describe('The chatbot’s contextually relevant response.'),
 });
 export type ContextualHelpOutput = z.infer<typeof ContextualHelpOutputSchema>;
 
-// Exported function to get contextual help.
-export async function getContextualHelp(input: ContextualHelpInput): Promise<ContextualHelpOutput> {
-  return contextualHelpFlow(input);
+export async function getContextualHelp(
+  rawInput: ContextualHelpInput
+): Promise<ContextualHelpOutput> {
+  const input = ContextualHelpInputSchema.parse(rawInput);
+
+  const systemPrompt =
+    "You are a helpful assistant for the " + input.department + " department.\n" +
+    "Your goal is to answer user questions accurately and naturally.\n\n" +
+    "**RULES:**\n" +
+    "1.  **Language:** You MUST detect the user's language and reply ONLY in that same language.\n" +
+    "2.  **Tone:** Be friendly and natural. Do not say you are an AI.\n" +
+    "3.  **Formatting:** When presenting information, use clear and simple language. Use Markdown for basic styling like bold text, italics, and bulleted lists (`*` or `-`).\n" +
+    "    **IMPORTANT**: Do NOT use Markdown tables. For example, do NOT use | Header | or |--|. \n" +
+    "    **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete.\n\n" +
+    "Use your knowledge and any provided context to answer the user's question.";
+
+  const userText = `Question: ${input.question}`;
+
+  const resp = await localOpenAI.chat.completions.create({
+    model: LOCAL_LLM_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userText },
+    ],
+  });
+
+  const text =
+    resp.choices?.[0]?.message?.content?.toString() ??
+    '[No content returned from local model]';
+
+  return ContextualHelpOutputSchema.parse({ response: text });
 }
-
-// Define the prompt to generate contextually relevant responses.
-const contextualHelpPrompt = ai.definePrompt({
-  name: 'contextualHelpPrompt',
-  input: {schema: ContextualHelpInputSchema},
-  output: {schema: ContextualHelpOutputSchema},
-  prompt: `You are a chatbot assistant for the {{{department}}} department.
-  Use your knowledge and the department context to answer the following question.
-  Question: {{{question}}}
-
-  Please format your response using Markdown for text styling like bold, italics, and lists.
-  However, if a table is required, you MUST format it using valid HTML table syntax (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags).
-  Do not include any conversational text before or after the HTML table itself. The table should be a standalone block.`,
-});
-
-// Define the Genkit flow for contextual help.
-const contextualHelpFlow = ai.defineFlow(
-  {
-    name: 'contextualHelpFlow',
-    inputSchema: ContextualHelpInputSchema,
-    outputSchema: ContextualHelpOutputSchema,
-  },
-  async input => {
-    const {output} = await contextualHelpPrompt(input);
-    return output!;
-  }
-);

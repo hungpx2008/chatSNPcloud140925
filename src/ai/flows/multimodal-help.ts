@@ -1,110 +1,130 @@
 'use server';
 
-/**
- * @fileOverview This file defines a Genkit flow for providing contextual help
- *               with multimodal input (text, images, and documents).
- *
- * - `getMultimodalHelp`: A function that takes a user's question, department, and an optional file
- *                         and returns a contextually relevant response.
- * - `MultimodalHelpInput`: The input type for the `getMultimodalHelp` function.
- * - `MultimodalHelpOutput`: The output type for the `getMultimodalHelp` function.
- */
+import { z } from 'zod';
+import { localOpenAI, LOCAL_LLM_MODEL } from '@/ai/localClient';
+import { extractTextFromFile } from '@/services/file-parser';
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {extractTextFromFile} from '@/services/file-parser';
+const dataUriRegex =
+  /^data:([a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+);base64,[A-Za-z0-9+/=]+$/;
 
-// Define the input schema for the multimodal help flow.
 const MultimodalHelpInputSchema = z.object({
-  question: z.string().describe('The user’s question.'),
-  department: z.string().describe('The department selected by the user.'),
+  question: z.string().min(1).describe('The user’s question.'),
+  department: z.string().min(1).describe('The department selected by the user.'),
   photoDataUri: z
     .string()
+    .regex(dataUriRegex, 'photoDataUri must be a valid base64 data URI')
     .optional()
     .describe(
-      "An optional photo or document, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "Optional photo/audio/document as data URI: 'data:<mimetype>;base64,<encoded>'"
     ),
 });
 export type MultimodalHelpInput = z.infer<typeof MultimodalHelpInputSchema>;
 
-// Define the output schema for the multimodal help flow.
 const MultimodalHelpOutputSchema = z.object({
   response: z.string().describe('The chatbot’s contextually relevant response.'),
 });
 export type MultimodalHelpOutput = z.infer<typeof MultimodalHelpOutputSchema>;
 
-// Exported function to get multimodal help.
-export async function getMultimodalHelp(input: MultimodalHelpInput): Promise<MultimodalHelpOutput> {
-  return multimodalHelpFlow(input);
+const MAX_FILECONTENT_CHARS = 16_000; // Reduced from 100_000
+function clamp(s?: string, max = MAX_FILECONTENT_CHARS) {
+  if (!s) return s;
+  return s.length > max ? s.slice(0, max) + '\n\n[...truncated…]' : s;
 }
 
-// Define the prompt to generate contextually relevant responses.
-const multimodalHelpPrompt = ai.definePrompt({
-  name: 'multimodalHelpPrompt',
-  input: {schema: z.object({
-    question: z.string(),
-    department: z.string(),
-    photoDataUri: z.string().optional(),
-    fileContent: z.string().optional(),
-  })},
-  output: {schema: MultimodalHelpOutputSchema},
-  prompt: `You are a chatbot assistant for the {{{department}}} department.
-  Use your knowledge, the department context, and the provided image, audio, or file content (if any) to answer the following question.
-  Please format your response using Markdown for text styling like bold, italics, and lists.
-  However, if a table is required, you MUST format it using valid HTML table syntax (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags).
-  Do not include any conversational text before or after the HTML table itself. The table should be a standalone block.
+export async function getMultimodalHelp(
+  rawInput: MultimodalHelpInput
+): Promise<MultimodalHelpOutput> {
+  const input = MultimodalHelpInputSchema.parse(rawInput);
 
-  Question:
-  {{{question}}}
-  {{#if photoDataUri}}
-  Media context (image or audio):
-  {{media url=photoDataUri}}
-  {{/if}}
-  {{#if fileContent}}
-  The user has provided a file with the following content, use it as the primary source of information to answer the question:
-  ---
-  {{{fileContent}}}
-  ---
-  {{/if}}
-  `,
-});
+  let mode: 'document' | 'image' | 'audio' | 'none' | 'unknown' = 'none';
+  let fileContent: string | undefined;
+  let dataUri = input.photoDataUri;
 
-// Define the Genkit flow for multimodal help.
-const multimodalHelpFlow = ai.defineFlow(
-  {
-    name: 'multimodalHelpFlow',
-    inputSchema: MultimodalHelpInputSchema,
-    outputSchema: MultimodalHelpOutputSchema,
-  },
-  async input => {
-    let fileContent: string | undefined = undefined;
-    let photoDataUri = input.photoDataUri;
-
-    if (input.photoDataUri) {
-        try {
-            const extracted = await extractTextFromFile(input.photoDataUri);
-            if(extracted.type === 'document') {
-                fileContent = extracted.content || undefined; // Convert null to undefined
-                // It's a document, so don't pass it to the model as media
-                photoDataUri = undefined;
-            } else if (extracted.type === 'audio') {
-              // It's audio, pass it as media and don't extract text
-              fileContent = undefined;
-            } else if (extracted.type === 'image') {
-              // It's an image, pass it as media
-              fileContent = undefined;
-            }
-        } catch (error) {
-            console.error("Could not parse file content, proceeding without it.", error);
-            // If parsing fails, we can just treat it as a potential image or ignore it.
-        }
+  if (dataUri) {
+    try {
+      const parsed = await extractTextFromFile(dataUri);
+      if (parsed?.type === 'document') {
+        mode = 'document';
+        fileContent = clamp(parsed.content || undefined);
+        dataUri = undefined;
+      } else if (parsed?.type === 'image') {
+        mode = 'image';
+      } else if (parsed?.type === 'audio') {
+        mode = 'audio';
+      } else {
+        mode = 'unknown';
+      }
+    } catch (e) {
+      console.error('Could not parse file; fallback to raw media if possible.', e);
+      mode = 'unknown';
     }
-
-    const {output} = await multimodalHelpPrompt({
-        ...input,
-        photoDataUri: photoDataUri,
-        fileContent: fileContent,
-    });
-    return output!;
   }
-);
+
+  const systemPrompt =
+    "You are a helpful assistant for the " + input.department + " department.\n" +
+    "Your goal is to answer user questions accurately and naturally.\n\n" +
+    "**RULES:**\n" +
+    "1.  **Language:** You MUST detect the user's language and reply ONLY in that same language.\n" +
+    "2.  **Tone:** Be friendly and natural. Do not say you are an AI.\n" +
+    "3.  **Formatting:**\n" +
+    "    -   Use clear and simple language.\n" +
+    "    -   Use Markdown for basic styling like bold text, italics, and bulleted lists (`*` or `-`).\n" +
+    "    -   **CRITICAL**: Do NOT use Markdown tables. For example, do NOT use | Header | or |---|. \n" +
+    "    -   **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete.\n\n" +
+    "Use your knowledge, the department context, and any provided document/media to answer the user's question.";
+
+  if (mode === 'document' || !dataUri) {
+    const userText =
+      `Question:\n${input.question}\n` +
+      (fileContent
+        ? `\nThe user provided a document. Treat it as the PRIMARY source of truth:\n---\n${fileContent}\n---\n`
+        : '');
+
+    const resp = await localOpenAI.chat.completions.create({
+      model: LOCAL_LLM_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userText },
+      ],
+    });
+
+    const text =
+      resp.choices?.[0]?.message?.content?.toString() ??
+      '[No content returned from local model]';
+    return MultimodalHelpOutputSchema.parse({ response: text });
+  }
+
+  const contentParts: any[] = [{ type: 'text', text: input.question }];
+
+  if (mode === 'image') {
+    contentParts.push({
+      type: 'image_url',
+      image_url: { url: dataUri! },
+    });
+  } else if (mode === 'audio') {
+    contentParts.push({
+      type: 'text',
+      text:
+        'Attached audio as data URI (this model may not process audio directly in chat). ' +
+        `Preview (base64 prefix): ${dataUri!.slice(0, 64)}...`,
+    });
+  } else {
+    contentParts.push({
+      type: 'text',
+      text: `Attached media (unknown type). Prefix: ${dataUri!.slice(0, 64)}...`,
+    });
+  }
+
+  const resp = await localOpenAI.chat.completions.create({
+    model: LOCAL_LLM_MODEL,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: contentParts as any },
+    ],
+  });
+
+  const text =
+    resp.choices?.[0]?.message?.content?.toString() ??
+    '[No content returned from local model]';
+  return MultimodalHelpOutputSchema.parse({ response: text });
+}
