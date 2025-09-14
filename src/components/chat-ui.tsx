@@ -203,7 +203,7 @@ export function ChatUI({ department }: { department: string }) {
       content: (
         <div className="flex items-center gap-2">
           <LoaderCircle className="animate-spin h-5 w-5" />
-          <span>{t('thinkingMessage')}</span>
+           <Typewriter text={t('thinkingMessage')} speed={50} />
         </div>
       ),
     };

@@ -1,9 +1,11 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const LOCAL_LLM_BASE_URL = "http://127.0.0.1:1234/v1";
-export const LOCAL_LLM_MODEL = "google/gemma-3n-e4b";
+const apiKey = process.env.GEMINI_API_KEY;
 
-export const localOpenAI = new OpenAI({
-  apiKey: 'not-needed', // API key is not needed for local LLM
-  baseURL: LOCAL_LLM_BASE_URL,
-});
+if (!apiKey) {
+  throw new Error('GEMINI_API_KEY environment variable not set');
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
+export const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });

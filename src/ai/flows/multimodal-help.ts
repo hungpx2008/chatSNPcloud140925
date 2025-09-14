@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { localOpenAI, LOCAL_LLM_MODEL } from '@/ai/localClient';
+import { geminiModel } from '@/ai/localClient';
 import { extractTextFromFile } from '@/services/file-parser';
 
 const dataUriRegex =
@@ -79,52 +79,31 @@ export async function getMultimodalHelp(
       (fileContent
         ? `\nThe user provided a document. Treat it as the PRIMARY source of truth:\n---\n${fileContent}\n---\n`
         : '');
-
-    const resp = await localOpenAI.chat.completions.create({
-      model: LOCAL_LLM_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userText },
-      ],
-    });
-
-    const text =
-      resp.choices?.[0]?.message?.content?.toString() ??
-      '[No content returned from local model]';
+    const prompt = `${systemPrompt}\n\n${userText}`;
+    const resp = await geminiModel.generateContent(prompt);
+    const text = resp.response.text();
     return MultimodalHelpOutputSchema.parse({ response: text });
   }
 
-  const contentParts: any[] = [{ type: 'text', text: input.question }];
+  const textPart = `${systemPrompt}\n\nQuestion: ${input.question}`;
+  const contentParts: any[] = [textPart];
 
   if (mode === 'image') {
-    contentParts.push({
-      type: 'image_url',
-      image_url: { url: dataUri! },
-    });
+    const [_, mimeType, base64] = dataUri.match(dataUriRegex)!;
+    contentParts.push({ inlineData: { mimeType, data: base64 } });
   } else if (mode === 'audio') {
     contentParts.push({
-      type: 'text',
       text:
         'Attached audio as data URI (this model may not process audio directly in chat). ' +
         `Preview (base64 prefix): ${dataUri!.slice(0, 64)}...`,
     });
   } else {
     contentParts.push({
-      type: 'text',
       text: `Attached media (unknown type). Prefix: ${dataUri!.slice(0, 64)}...`,
     });
   }
 
-  const resp = await localOpenAI.chat.completions.create({
-    model: LOCAL_LLM_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: contentParts as any },
-    ],
-  });
-
-  const text =
-    resp.choices?.[0]?.message?.content?.toString() ??
-    '[No content returned from local model]';
+  const resp = await geminiModel.generateContent(contentParts);
+  const text = resp.response.text();
   return MultimodalHelpOutputSchema.parse({ response: text });
 }

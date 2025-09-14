@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { localOpenAI, LOCAL_LLM_MODEL } from '@/ai/localClient';
+import { geminiModel } from '@/ai/localClient';
 
 const ContextualHelpInputSchema = z.object({
   question: z.string().min(1).describe('The user’s question.'),
@@ -32,17 +32,11 @@ export async function getContextualHelp(
 
   const userText = `Question: ${input.question}`;
 
-  const resp = await localOpenAI.chat.completions.create({
-    model: LOCAL_LLM_MODEL,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userText },
-    ],
-  });
+  const prompt = `${systemPrompt}\n\n${userText}`;
 
-  const text =
-    resp.choices?.[0]?.message?.content?.toString() ??
-    '[No content returned from local model]';
+  const resp = await geminiModel.generateContent(prompt);
+
+  const text = resp.response.text();
 
   return ContextualHelpOutputSchema.parse({ response: text });
 }
