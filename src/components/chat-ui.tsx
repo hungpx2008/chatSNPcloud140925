@@ -22,10 +22,11 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  Download,
+  FileDown,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import ReactMarkdown from 'react-markdown';
-
 
 import { getHelp } from "@/app/actions";
 import { Input } from "@/components/ui/input";
@@ -80,19 +81,7 @@ import { Switch } from "./ui/switch";
 import { Typewriter } from "./typewriter";
 import { Textarea } from "./ui/textarea";
 import { AutoTable } from "./ui/auto-table";
-
-interface Message {
-  id: number;
-  role: "user" | "bot";
-  content: string | React.ReactNode;
-}
-
-interface ChatSession {
-  id: string;
-  title: string;
-  messages: Message[];
-  department: string;
-}
+import { Message, ChatSession } from '../lib/types';
 
 interface AttachedFile {
   dataUri: string;
@@ -101,7 +90,6 @@ interface AttachedFile {
 }
 
 const LLMResponseRenderer = ({ content }: { content: string }) => {
-    // Split content by table tags, but keep the tags
     const parts = content.split(/(<table[\s\S]*?<\/table>)/g);
 
     return (
@@ -110,7 +98,6 @@ const LLMResponseRenderer = ({ content }: { content: string }) => {
                 if (part.trim().startsWith('<table')) {
                     return <AutoTable key={index} htmlString={part} />;
                 }
-                // Render non-table parts with Markdown, only if they contain non-whitespace characters
                 if (part.trim()) {
                   return <ReactMarkdown key={index}>{part}</ReactMarkdown>;
                 }
@@ -129,6 +116,7 @@ export function ChatUI({ department }: { department: string }) {
     id: Date.now(),
     role: "bot",
     content: t('welcomeMessage').replace('{department}', dept),
+    textContent: t('welcomeMessage').replace('{department}', dept),
   });
 
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
@@ -195,6 +183,7 @@ export function ChatUI({ department }: { department: string }) {
       id: Date.now(),
       role: "user",
       content: userMessageContent,
+      textContent: userInput,
     };
 
     const thinkingMessage: Message = {
@@ -206,6 +195,7 @@ export function ChatUI({ department }: { department: string }) {
            <Typewriter text={t('thinkingMessage')} speed={50} />
         </div>
       ),
+      textContent: t('thinkingMessage'),
     };
     
     const updatedMessages = [...messages, newUserMessage, thinkingMessage];
@@ -220,39 +210,101 @@ export function ChatUI({ department }: { department: string }) {
     setAttachedFile(null);
 
     let currentChatId = activeChatId;
+    let sessionToUpdate: ChatSession | undefined;
 
-    // Create a new chat session if it's the first user message
-    if (!activeChatId) {
+    if (activeChatId) {
+        sessionToUpdate = chatHistory.find(chat => chat.id === activeChatId);
+    } else {
       const newChatId = `chat_${Date.now()}`;
       const newChatTitle = userInput.substring(0, 30) + (userInput.length > 30 ? "..." : "");
       const newChatSession: ChatSession = {
         id: newChatId,
         title: newChatTitle,
-        messages: updatedMessages,
+        messages: updatedMessages, // Start with the user message and thinking
         department: department
       };
       setChatHistory(prev => [newChatSession, ...prev]);
       setActiveChatId(newChatId);
       currentChatId = newChatId;
+      sessionToUpdate = newChatSession;
     }
 
-    const botResponse = await getHelp(userInput, department, fileToSend?.dataUri);
-    const newBotMessage: Message = {
-      id: Date.now() + 2,
-      role: "bot",
-      content: botResponse,
-    };
+    if (sessionToUpdate) {
+        (sessionToUpdate as ChatSession).messages = updatedMessages;
+    }
 
-    const finalMessages = [...updatedMessages.slice(0, -1), newBotMessage];
-    setMessages(finalMessages);
+    const rawResponse = await getHelp(
+        userInput, 
+        department, 
+        sessionToUpdate as ChatSession, 
+        fileToSend?.dataUri
+    );
+    
+    try {
+        const responseData = JSON.parse(rawResponse);
 
-    // Update the history with the final messages
-    if (currentChatId) {
-      setChatHistory(prev => 
-        prev.map(chat => 
-          chat.id === currentChatId ? { ...chat, messages: finalMessages } : chat
-        )
-      );
+        const newBotMessage: Message = {
+            id: Date.now() + 2,
+            role: "bot",
+            content: responseData.content,
+            textContent: responseData.content,
+        };
+
+        if (responseData.isExport) {
+             const { docx, xlsx } = responseData; // Assuming the structure is { isExport: true, docx: ..., xlsx: ... }
+             newBotMessage.content = (
+                <div className="space-y-3">
+                    <p>{t('exportDownloadPrompt')}</p>
+                    <div className="flex gap-3">
+                        <a href={docx.dataUri} download={docx.fileName}>
+                            <Button variant="outline" size="sm">
+                                <FileDown className="mr-2 h-4 w-4" />
+                                {t('downloadDocx')}
+                            </Button>
+                        </a>
+                        <a href={xlsx.dataUri} download={xlsx.fileName}>
+                            <Button variant="outline" size="sm">
+                                <FileDown className="mr-2 h-4 w-4" />
+                                {t('downloadXlsx')}
+                            </Button>
+                        </a>
+                    </div>
+                </div>
+             );
+             newBotMessage.textContent = t('exportDownloadPrompt');
+        } else {
+          newBotMessage.content = <LLMResponseRenderer content={responseData.content} />;
+        }
+
+        const finalMessages = [...updatedMessages.slice(0, -1), newBotMessage];
+        setMessages(finalMessages);
+
+        if (currentChatId) {
+            setChatHistory(prev => 
+                prev.map(chat => 
+                chat.id === currentChatId ? { ...chat, messages: finalMessages } : chat
+                )
+            );
+        }
+
+    } catch(e) {
+        console.error("Failed to parse bot response", e);
+        // Handle non-JSON or malformed JSON responses gracefully
+        const fallbackMessage: Message = {
+            id: Date.now() + 2,
+            role: 'bot',
+            content: <LLMResponseRenderer content={rawResponse} />, // Use renderer for raw response too
+            textContent: rawResponse,
+        };
+        const finalMessages = [...updatedMessages.slice(0, -1), fallbackMessage];
+        setMessages(finalMessages);
+         if (currentChatId) {
+            setChatHistory(prev => 
+                prev.map(chat => 
+                chat.id === currentChatId ? { ...chat, messages: finalMessages } : chat
+                )
+            );
+        }
     }
   };
 
@@ -470,7 +522,7 @@ export function ChatUI({ department }: { department: string }) {
         <main className="flex-1 overflow-hidden">
           <ScrollArea className="h-full">
             <div className="p-4 space-y-6">
-              {messages.map((message, index) => (
+              {messages.map((message) => (
                 <div
                   key={message.id}
                   className={cn(
@@ -488,22 +540,14 @@ export function ChatUI({ department }: { department: string }) {
                   <div
                     className={cn(
                       "p-3 rounded-2xl shadow-sm prose prose-sm max-w-none",
-                      "prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2", // Adjust prose margins
+                      "prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-ol:my-2",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-none"
                         : "bg-card border rounded-bl-none"
                     )}
                   >
-                    {typeof message.content === "string" ? (
-                        message.role === 'bot' ? (
-                            (index === messages.length - 1 && !message.content.includes('<table')) ? (
-                                <Typewriter text={message.content} speed={20} />
-                            ) : (
-                                <LLMResponseRenderer content={message.content} />
-                            )
-                        ) : (
-                            <ReactMarkdown>{message.content}</ReactMarkdown>
-                        )
+                     {typeof message.content === "string" ? (
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                     ) : (
                         message.content
                     )}
@@ -607,5 +651,3 @@ function SubmitButton() {
     </Button>
   );
 }
-
-    
