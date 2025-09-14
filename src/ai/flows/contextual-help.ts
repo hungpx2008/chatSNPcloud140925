@@ -26,8 +26,7 @@ export async function getContextualHelp(
     "1.  **Language:** You MUST detect the user's language and reply ONLY in that same language.\n" +
     "2.  **Tone:** Be friendly and natural. Do not say you are an AI.\n" +
     "3.  **Formatting:** When presenting information, use clear and simple language. Use Markdown for basic styling like bold text, italics, and bulleted lists (`*` or `-`).\n" +
-    "    **IMPORTANT**: Do NOT use Markdown tables. For example, do NOT use | Header | or |--|. \n" +
-    "    **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete.\n\n" +
+    "    **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete. This is the only supported method for creating tables.\n\n" +
     "Use your knowledge and any provided context to answer the user's question.";
 
   const userText = `Question: ${input.question}`;

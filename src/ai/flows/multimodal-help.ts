@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { geminiModel } from '@/ai/localClient';
 import { extractTextFromFile } from '@/services/file-parser';
 
-const dataUriRegex =
-  /^data:([a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+);base64,[A-Za-z0-9+/=]+$/;
+// Regex updated to correctly capture the base64 data part.
+const dataUriRegex = /^data:(.+?);base64,(.+)$/;
 
 const MultimodalHelpInputSchema = z.object({
   question: z.string().min(1).describe('The user’s question.'),
@@ -46,7 +46,7 @@ export async function getMultimodalHelp(
       if (parsed?.type === 'document') {
         mode = 'document';
         fileContent = clamp(parsed.content || undefined);
-        dataUri = undefined;
+        dataUri = undefined; // Unset dataUri so we don't send it to the model
       } else if (parsed?.type === 'image') {
         mode = 'image';
       } else if (parsed?.type === 'audio') {
@@ -69,8 +69,7 @@ export async function getMultimodalHelp(
     "3.  **Formatting:**\n" +
     "    -   Use clear and simple language.\n" +
     "    -   Use Markdown for basic styling like bold text, italics, and bulleted lists (`*` or `-`).\n" +
-    "    -   **CRITICAL**: Do NOT use Markdown tables. For example, do NOT use | Header | or |---|. \n" +
-    "    -   **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete.\n\n" +
+    "    -   **If a table is required, you MUST format it using valid HTML table syntax** (with <table>, <thead>, <tbody>, <tr>, <th>, and <td> tags). Ensure the HTML is well-formed and complete. This is the only supported method for creating tables.\n\n" +
     "Use your knowledge, the department context, and any provided document/media to answer the user's question.";
 
   if (mode === 'document' || !dataUri) {
@@ -88,19 +87,22 @@ export async function getMultimodalHelp(
   const textPart = `${systemPrompt}\n\nQuestion: ${input.question}`;
   const contentParts: any[] = [textPart];
 
-  if (mode === 'image') {
-    const [_, mimeType, base64] = dataUri.match(dataUriRegex)!;
-    contentParts.push({ inlineData: { mimeType, data: base64 } });
-  } else if (mode === 'audio') {
-    contentParts.push({
-      text:
-        'Attached audio as data URI (this model may not process audio directly in chat). ' +
-        `Preview (base64 prefix): ${dataUri!.slice(0, 64)}...`,
-    });
-  } else {
-    contentParts.push({
-      text: `Attached media (unknown type). Prefix: ${dataUri!.slice(0, 64)}...`,
-    });
+  const match = dataUri.match(dataUriRegex);
+  if (match) {
+    const [_, mimeType, base64] = match;
+    if (mode === 'image' && mimeType && base64) {
+      contentParts.push({ inlineData: { mimeType, data: base64 } });
+    } else if (mode === 'audio') {
+      contentParts.push({
+        text:
+          'Attached audio as data URI (this model may not process audio directly in chat). ' +
+          `Preview (base64 prefix): ${dataUri!.slice(0, 64)}...`,
+      });
+    } else {
+      contentParts.push({
+        text: `Attached media (unknown type). Prefix: ${dataUri!.slice(0, 64)}...`,
+      });
+    }
   }
 
   const resp = await geminiModel.generateContent(contentParts);

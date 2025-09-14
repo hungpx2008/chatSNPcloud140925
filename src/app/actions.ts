@@ -1,26 +1,32 @@
-"use server";
+'use server';
 
-import { getContextualHelp } from "@/ai/flows/contextual-help";
-import { getMultimodalHelp } from "@/ai/flows/multimodal-help";
+import { generateContent } from 'ai';
+import {
+  MultimodalHelpInput,
+  getMultimodalHelp,
+} from '@/ai/flows/multimodal-help';
+import { geminiModel } from '@/ai/localClient';
 
+// This is the primary endpoint for the chat UI.
 export async function getHelp(
   question: string,
   department: string,
-  photoDataUri?: string,
-): Promise<string> {
-  if (!question || !department) {
-    return "I can't help without a question and a department.";
-  }
+  photoDataUri?: string
+) {
+  // A real app would have more robust rate limiting.
 
   try {
-    if (photoDataUri) {
-        const result = await getMultimodalHelp({ question, department, photoDataUri });
-        return result.response;
-    }
-    const result = await getContextualHelp({ question, department });
-    return result.response;
-  } catch (error) {
-    console.error("Error getting contextual help:", error);
-    return "Sorry, I encountered an error while trying to help. Please try again.";
+    const input: MultimodalHelpInput = {
+      question,
+      department,
+      photoDataUri,
+    };
+    const { response } = await getMultimodalHelp(input);
+    return response;
+  } catch (e: any) {
+    // Log the full error to the server console for better debugging
+    console.error('[getHelp action failed]', e);
+    // A real app would have more robust error handling and user-facing messages.
+    return `Sorry, I encountered an error while trying to help. Please try again. (Error: ${e.message})`;
   }
 }
